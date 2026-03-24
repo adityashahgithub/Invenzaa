@@ -40,19 +40,19 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await authApi.login({ email, password });
-    const { user: u, accessToken, refreshToken } = data.data;
+    const { accessToken, refreshToken } = data.data;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
-    setUser(u);
+    await loadUser();
     return data;
   };
 
   const register = async (payload) => {
     const { data } = await authApi.register(payload);
-    const { user: u, accessToken, refreshToken } = data.data;
+    const { accessToken, refreshToken } = data.data;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
-    setUser(u);
+    await loadUser();
     return data;
   };
 
@@ -74,6 +74,14 @@ export const AuthProvider = ({ children }) => {
     return roles.includes(user.role);
   };
 
+  const hasPermission = (...permissions) => {
+    if (!user) return false;
+    if (user.role === 'Owner' || user.role === 'Admin') return true;
+    const rolePermissions = user.rolePermissions || [];
+    if (rolePermissions.includes('*')) return true;
+    return permissions.some((p) => rolePermissions.includes(p));
+  };
+
   const isAdmin = () => hasRole('Admin', 'Owner');
 
   return (
@@ -85,6 +93,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         hasRole,
+        hasPermission,
         isAdmin,
         refreshUser: loadUser,
       }}

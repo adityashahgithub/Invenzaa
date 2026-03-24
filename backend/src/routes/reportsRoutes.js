@@ -9,10 +9,12 @@ import {
 import { reportQueryValidation } from '../utils/reportValidators.js';
 import { validate } from '../middleware/validate.js';
 import { protect } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/rbac.js';
 
 const router = express.Router();
 
 router.use(protect);
+router.use(requirePermission('reports'));
 
 router.get('/inventory', getInventoryReport);
 router.get('/sales', reportQueryValidation, validate, getSalesReport);

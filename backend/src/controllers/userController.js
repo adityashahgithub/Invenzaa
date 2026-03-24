@@ -1,16 +1,20 @@
 import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { ensureDefaultRolesForOrg } from './rolesController.js';
 
 export const getMe = async (req, res, next) => {
   try {
+    const orgId = req.user.organization?._id ?? req.user.organization;
     const user = await User.findById(req.user._id)
       .select('-password -refreshToken -passwordResetToken -passwordResetExpires')
       .populate('organization', 'name address licenseNumber phone');
+    const role = await Role.findOne({ organization: orgId, name: user.role }).select('permissions').lean();
+    const rolePermissions = role?.permissions || [];
 
     res.json({
       success: true,
-      data: { user },
+      data: { user: { ...user.toObject(), rolePermissions } },
     });
   } catch (error) {
     next(error);
@@ -68,13 +72,17 @@ export const createUser = async (req, res, next) => {
   try {
     const { email, password, firstName, lastName, role } = req.body;
     const orgId = req.user.organization?._id ?? req.user.organization;
+    await ensureDefaultRolesForOrg(orgId);
 
     const existingUser = await User.findOne({ email, organization: orgId });
     if (existingUser) {
       throw new AppError('Email already registered in this organization.', 400);
     }
 
-    const roleExists = await Role.findOne({ name: { $regex: new RegExp(`^${role}$`, 'i') } });
+    const roleExists = await Role.findOne({
+      organization: orgId,
+      name: { $regex: new RegExp(`^${role}$`, 'i') },
+    });
     if (!roleExists) {
       throw new AppError('Invalid role. Role does not exist.', 400);
     }

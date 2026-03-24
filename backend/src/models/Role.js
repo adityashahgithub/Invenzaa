@@ -5,8 +5,13 @@ const roleSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
+    },
+    organization: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: true,
+      index: true,
     },
     permissions: {
       type: [String],
@@ -19,5 +24,7 @@ const roleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+roleSchema.index({ organization: 1, name: 1 }, { unique: true });
 
 export const Role = mongoose.model('Role', roleSchema);

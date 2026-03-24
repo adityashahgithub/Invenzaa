@@ -16,7 +16,7 @@ import {
 } from '../utils/medicineValidators.js';
 import { validate } from '../middleware/validate.js';
 import { protect } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 
 const router = express.Router();
 
@@ -30,9 +30,9 @@ router.post(
   createMedicine
 );
 
-router.get('/', listValidation, validate, listMedicines);
-router.get('/search', searchValidation, validate, searchMedicines);
-router.get('/:id', idParamValidation, validate, getMedicineById);
+router.get('/', requirePermission('medicines'), listValidation, validate, listMedicines);
+router.get('/search', requirePermission('medicines'), searchValidation, validate, searchMedicines);
+router.get('/:id', requirePermission('medicines'), idParamValidation, validate, getMedicineById);
 
 router.put(
   '/:id',

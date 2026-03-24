@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Boxes, AlertTriangle, CalendarClock, IndianRupee } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { dashboardApi } from '../api/dashboardApi';
 import styles from './Dashboard.module.css';
@@ -56,35 +57,36 @@ export const Dashboard = () => {
     <div className="page-container">
       <header className={styles.header}>
         <h1>Dashboard</h1>
-        <p>
-          Welcome, {user?.firstName} {user?.lastName} · {user?.organization?.name}
-        </p>
+        <p>Welcome, {user?.firstName} {user?.lastName}</p>
+        {user?.organization?.name && (
+          <p className={styles.orgLine}>Organization: {user.organization.name}</p>
+        )}
       </header>
 
       <section className={styles.cards}>
         <div className={styles.card}>
-          <span className={styles.cardIcon}>📦</span>
+          <span className={styles.cardIcon}><Boxes size={22} /></span>
           <div>
             <span className={styles.cardValue}>{totalMedicines}</span>
             <span className={styles.cardLabel}>Total Medicines</span>
           </div>
         </div>
         <div className={`${styles.card} ${lowStockCount > 0 ? styles.cardWarning : ''}`}>
-          <span className={styles.cardIcon}>⚠️</span>
+          <span className={styles.cardIcon}><AlertTriangle size={22} /></span>
           <div>
             <span className={styles.cardValue}>{lowStockCount}</span>
             <span className={styles.cardLabel}>Low Stock</span>
           </div>
         </div>
         <div className={`${styles.card} ${expiryAlertsCount > 0 ? styles.cardDanger : ''}`}>
-          <span className={styles.cardIcon}>📅</span>
+          <span className={styles.cardIcon}><CalendarClock size={22} /></span>
           <div>
             <span className={styles.cardValue}>{expiryAlertsCount}</span>
             <span className={styles.cardLabel}>Expiry Alerts (30 days)</span>
           </div>
         </div>
         <div className={styles.card}>
-          <span className={styles.cardIcon}>💰</span>
+          <span className={styles.cardIcon}><IndianRupee size={22} /></span>
           <div>
             <span className={styles.cardValue}>{formatCurrency(salesSummary?.totalAmount ?? 0)}</span>
             <span className={styles.cardLabel}>Total Sales</span>

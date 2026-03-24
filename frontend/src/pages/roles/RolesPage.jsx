@@ -4,6 +4,7 @@ import { useUI } from '../../contexts/UIContext';
 import styles from './RolesPage.module.css';
 
 export const RolesPage = () => {
+  const SYSTEM_ROLES = ['Owner', 'Admin', 'Pharmacist', 'Staff', 'Viewer'];
   const { showToast, confirm, openModal, closeModal } = useUI();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,12 +117,15 @@ export const RolesPage = () => {
         {roles.map((r) => (
           <div key={r._id} className="glass-card animate-fade-in">
             <div className={styles.cardHeader}>
-              <h3>{r.name}</h3>
+              <h3>
+                {r.name}
+                {SYSTEM_ROLES.includes(r.name) && <span className={styles.systemRole}>System</span>}
+              </h3>
               <div className={styles.cardActions}>
                 <button className={styles.smallBtn} onClick={() => startEdit(r)}>
                   Edit
                 </button>
-                {!['Owner', 'Admin'].includes(r.name) && (
+                {!SYSTEM_ROLES.includes(r.name) && (
                   <button
                     className={`${styles.smallBtn} ${styles.danger}`}
                     onClick={() => handleDelete(r._id)}

@@ -76,18 +76,18 @@ export default function App() {
         >
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="medicines" element={<MedicineList />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="sales" element={<SalesList />} />
-          <Route path="sales/new" element={<NewSale />} />
-          <Route path="sales/:id" element={<SaleDetail />} />
-          <Route path="purchases" element={<PurchasesList />} />
-          <Route path="purchases/new" element={<NewPurchase />} />
-          <Route path="purchases/:id" element={<PurchaseDetail />} />
-          <Route path="collaboration/request" element={<CollaborationRequest />} />
-          <Route path="collaboration/requests" element={<CollaborationRequestsList />} />
-          <Route path="collaboration/respond/:id" element={<CollaborationRespond />} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="medicines" element={<ProtectedRoute requiredPermissions="medicines"><MedicineList /></ProtectedRoute>} />
+          <Route path="inventory" element={<ProtectedRoute requiredPermissions="inventory"><InventoryPage /></ProtectedRoute>} />
+          <Route path="sales" element={<ProtectedRoute requiredPermissions="sales"><SalesList /></ProtectedRoute>} />
+          <Route path="sales/new" element={<ProtectedRoute requiredPermissions="sales"><NewSale /></ProtectedRoute>} />
+          <Route path="sales/:id" element={<ProtectedRoute requiredPermissions="sales"><SaleDetail /></ProtectedRoute>} />
+          <Route path="purchases" element={<ProtectedRoute requiredPermissions="purchases"><PurchasesList /></ProtectedRoute>} />
+          <Route path="purchases/new" element={<ProtectedRoute requiredPermissions="purchases"><NewPurchase /></ProtectedRoute>} />
+          <Route path="purchases/:id" element={<ProtectedRoute requiredPermissions="purchases"><PurchaseDetail /></ProtectedRoute>} />
+          <Route path="collaboration/request" element={<ProtectedRoute requiredPermissions="collaboration"><CollaborationRequest /></ProtectedRoute>} />
+          <Route path="collaboration/requests" element={<ProtectedRoute requiredPermissions="collaboration"><CollaborationRequestsList /></ProtectedRoute>} />
+          <Route path="collaboration/respond/:id" element={<ProtectedRoute requiredPermissions="collaboration"><CollaborationRespond /></ProtectedRoute>} />
+          <Route path="reports" element={<ProtectedRoute requiredPermissions="reports"><ReportsPage /></ProtectedRoute>} />
           <Route
             path="users"
             element={

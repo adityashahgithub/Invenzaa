@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import styles from './AppLayout.module.css';
 
 export const AppLayout = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
@@ -15,6 +15,14 @@ export const AppLayout = () => {
 
   const toggleSidebar = () => setShowMobileSidebar(!showMobileSidebar);
   const closeSidebar = () => setShowMobileSidebar(false);
+  const can = {
+    medicines: hasPermission('medicines'),
+    inventory: hasPermission('inventory'),
+    sales: hasPermission('sales'),
+    purchases: hasPermission('purchases'),
+    collaboration: hasPermission('collaboration'),
+    reports: hasPermission('reports'),
+  };
 
   return (
     <div className={styles.layout}>
@@ -49,60 +57,72 @@ export const AppLayout = () => {
           >
             Dashboard
           </NavLink>
-          <NavLink
-            to="/medicines"
-            onClick={closeSidebar}
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Medicines
-          </NavLink>
-          <NavLink
-            to="/inventory"
-            onClick={closeSidebar}
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Inventory
-          </NavLink>
-          <NavLink
-            to="/sales"
-            onClick={closeSidebar}
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Sales
-          </NavLink>
-          <NavLink
-            to="/purchases"
-            onClick={closeSidebar}
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Purchases
-          </NavLink>
-          <NavLink
-            to="/collaboration/requests"
-            onClick={closeSidebar}
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Collaboration
-          </NavLink>
-          <NavLink
-            to="/reports"
-            onClick={closeSidebar}
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Reports
-          </NavLink>
+          {can.medicines && (
+            <NavLink
+              to="/medicines"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+              }
+            >
+              Medicines
+            </NavLink>
+          )}
+          {can.inventory && (
+            <NavLink
+              to="/inventory"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+              }
+            >
+              Inventory
+            </NavLink>
+          )}
+          {can.sales && (
+            <NavLink
+              to="/sales"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+              }
+            >
+              Sales
+            </NavLink>
+          )}
+          {can.purchases && (
+            <NavLink
+              to="/purchases"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+              }
+            >
+              Purchases
+            </NavLink>
+          )}
+          {can.collaboration && (
+            <NavLink
+              to="/collaboration/requests"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+              }
+            >
+              Collaboration
+            </NavLink>
+          )}
+          {can.reports && (
+            <NavLink
+              to="/reports"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+              }
+            >
+              Reports
+            </NavLink>
+          )}
 
           {(user?.role === 'Admin' || user?.role === 'Owner') && (
             <div className={styles.navSection}>

@@ -25,6 +25,17 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || '';
+    const isAuthFormRequest =
+      requestUrl.includes('/auth/login') ||
+      requestUrl.includes('/auth/register') ||
+      requestUrl.includes('/auth/forgot-password') ||
+      requestUrl.includes('/auth/reset-password');
+
+    // For auth form submissions, surface backend error directly in UI.
+    if (isAuthFormRequest) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;

@@ -25,9 +25,6 @@
 
 5. **Connect** → Drivers → Copy connection string:
 
-   ```
-   mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-   ```
 
 6. **Set database name** in the URI:
 
@@ -37,7 +34,7 @@
 
 7. **Use as env var**:
    ```
-   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/invenzaa?retryWrites=true&w=majority
+
    ```
 
 ---

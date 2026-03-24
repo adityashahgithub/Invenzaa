@@ -4,7 +4,7 @@ import { createSale, listSales, getSaleById } from '../controllers/salesControll
 import { saleValidation } from '../utils/inventoryValidators.js';
 import { validate } from '../middleware/validate.js';
 import { protect } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 
 const router = express.Router();
 
@@ -12,14 +12,14 @@ router.use(protect);
 
 router.post(
   '/',
-  requireRole('Owner', 'Admin', 'Pharmacist', 'Staff'),
+  requirePermission('sales'),
   saleValidation,
   validate,
   createSale
 );
 
-router.get('/', listSales);
+router.get('/', requirePermission('sales'), listSales);
 
-router.get('/:id', param('id').isMongoId().withMessage('Invalid sale ID'), validate, getSaleById);
+router.get('/:id', requirePermission('sales'), param('id').isMongoId().withMessage('Invalid sale ID'), validate, getSaleById);
 
 export default router;

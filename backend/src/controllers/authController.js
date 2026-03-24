@@ -5,6 +5,7 @@ import { Organization } from '../models/Organization.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { env } from '../config/env.js';
 import { sendMail } from '../utils/mailer.js';
+import { ensureDefaultRolesForOrg } from './rolesController.js';
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign(
@@ -30,6 +31,7 @@ export const register = async (req, res, next) => {
     }
 
     const organization = await Organization.create({ name: organizationName });
+    await ensureDefaultRolesForOrg(organization._id);
     const user = await User.create({
       email,
       password,

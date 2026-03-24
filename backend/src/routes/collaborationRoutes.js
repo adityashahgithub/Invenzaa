@@ -17,11 +17,12 @@ import {
 } from '../utils/collaborationValidators.js';
 import { validate } from '../middleware/validate.js';
 import { protect } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission, requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
 
 router.use(protect);
+router.use(requirePermission('collaboration'));
 
 router.get('/partners', getPartners);
 
