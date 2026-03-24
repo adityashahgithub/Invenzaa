@@ -28,9 +28,7 @@
 
 6. **Set database name** in the URI:
 
-   ```
-   mongodb+srv://user:pass@cluster.mongodb.net/invenzaa?retryWrites=true&w=majority
-   ```
+  
 
 7. **Use as env var**:
    ```
