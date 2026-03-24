@@ -1,0 +1,27 @@
+.subtitle {
+    color: var(--color-text-dim);
+    font-size: 0.9375rem;
+    margin-top: 0.25rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.cardHeader {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.form {
+    padding: 2rem;
+}
+
+.muted {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--color-text-dim);
+    font-size: 0.75rem;
+}

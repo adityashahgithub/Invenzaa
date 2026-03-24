@@ -1,0 +1,233 @@
+.container {
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, hsla(var(--color-primary-hue), 83%, 53%, 0.15), transparent 40%),
+        radial-gradient(circle at bottom left, hsla(var(--color-primary-hue), 83%, 53%, 0.1), transparent 40%);
+    display: flex;
+    flex-direction: column;
+}
+
+.nav {
+    padding: 1.5rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.logoIcon {
+    width: 32px;
+    height: 32px;
+    background: var(--grad-primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.navActions {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.loginBtn {
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.loginBtn:hover {
+    color: var(--color-text);
+}
+
+.registerBtn {
+    padding: 0.75rem 1.5rem;
+    background: var(--grad-primary);
+    color: white;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    box-shadow: 0 4px 12px hsla(var(--color-primary-hue), 83%, 53%, 0.3);
+}
+
+.registerBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px hsla(var(--color-primary-hue), 83%, 53%, 0.4);
+}
+
+.hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 4rem;
+    gap: 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.heroContent {
+    flex: 1.2;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.5rem 1.25rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.title {
+    font-size: 4rem;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    color: var(--color-text);
+}
+
+.highlight {
+    background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.description {
+    font-size: 1.25rem;
+    color: var(--color-text-muted);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+}
+
+.ctaGroup {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.primaryCta {
+    padding: 1rem 2rem;
+    background: var(--grad-primary);
+    color: white;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    font-size: 1.125rem;
+    box-shadow: 0 8px 24px hsla(var(--color-primary-hue), 83%, 53%, 0.3);
+}
+
+.secondaryCta {
+    padding: 1rem 2rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.visuals {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    position: relative;
+}
+
+.statsCard,
+.alertCard {
+    padding: 1.5rem;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    width: 280px;
+}
+
+.statsCard {
+    align-self: flex-start;
+}
+
+.alertCard {
+    align-self: flex-end;
+}
+
+.statsIcon,
+.alertIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.statsIcon {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.alertIcon {
+    background: hsla(0, 84%, 60%, 0.1);
+    color: var(--color-error);
+}
+
+.features {
+    padding: 6rem 4rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.featureItem {
+    text-align: center;
+}
+
+.featureIcon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.footer {
+    padding: 3rem;
+    text-align: center;
+    color: var(--color-text-dim);
+    border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 1024px) {
+    .hero {
+        flex-direction: column;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .description {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .ctaGroup {
+        justify-content: center;
+    }
+
+    .visuals {
+        display: none;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+        padding: 4rem 2rem;
+    }
+}
