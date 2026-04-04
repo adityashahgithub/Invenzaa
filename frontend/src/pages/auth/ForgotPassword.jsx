@@ -16,7 +16,7 @@ export const ForgotPassword = () => {
     setMessage('');
     setLoading(true);
     try {
-      await authApi.forgotPassword(email);
+      await authApi.forgotPassword(email.trim());
       setMessage('If the email exists, a reset link will be sent.');
     } catch (err) {
       setError(err.response?.data?.message || 'Request failed');

@@ -1,25 +1,45 @@
-# Invenzaa – Medicine Inventory Management System
+# Invenzaa
 
-MERN stack application for pharmacy inventory management with role-based access, sales, purchases, collaboration, and reports.
+Pharmacy-oriented **inventory management** for medicines: catalog, batches, sales, purchases, reporting, and **collaboration** between organizations.
 
 ## Features
 
-- **Auth & RBAC**: JWT auth, refresh tokens, roles (Owner, Admin, Pharmacist, Staff, Viewer)
-- **Medicines**: CRUD, search, batches, expiry tracking
-- **Inventory**: Status, low-stock alerts, expiry alerts, logs
-- **Sales & Purchases**: Transaction-based flow with invoices
-- **Collaboration**: Inter-organization stock requests
-- **Reports**: Sales, purchases, inventory, low-stock, expiry
-- **Team Management**: Add staff, assign roles, activate/deactivate users
+- **Medicines** — Catalog with categories, generics, units, and stock signals.
+- **Inventory** — Batches with expiry; low-stock and expiry awareness.
+- **Sales & purchases** — Invoicing-style flows with PDF export where enabled.
+- **Collaboration** — Request/approve medicine support across partner organizations.
+- **Reports & masters** — Reporting plus categories, brands, suppliers.
+- **RBAC** — Role-based access (Owner, Admin, Pharmacist, Staff, Viewer, etc.).
 
-## Quick Start
+## Tech stack
+
+| Layer | Stack |
+|--------|--------|
+| Frontend | React (Vite), React Router, Tailwind, Radix UI |
+| Backend | Node.js, Express, MongoDB (Mongoose) |
+| Auth | JWT (access/refresh patterns as implemented in repo) |
+
+## Repository layout
+
+```
+├── backend/          # API server (Express, Mongoose models, routes)
+├── frontend/         # SPA (Vite + React)
+└── docs/             # Deployment notes, manual test plan, etc.
+```
+
+## Quick start (local)
+
+### Requirements
+
+- Node.js 18+
+- MongoDB (local or Atlas)
 
 ### Backend
 
 ```bash
 cd backend
-cp .env.example .env
-# Edit .env with your MONGODB_URI, JWT secrets
+cp .env.example .env   # if present; else configure .env manually
+# Set MONGODB_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, CLIENT_URL, etc.
 npm install
 npm run dev
 ```
@@ -29,43 +49,34 @@ npm run dev
 ```bash
 cd frontend
 npm install
+# Set VITE_API_URL (or equivalent) to your API base URL
 npm run dev
 ```
 
-### Seed Admin Account
+### Automated tests (backend)
 
 ```bash
 cd backend
-# Set SEEDER_ADMIN_EMAIL, SEEDER_ADMIN_PASSWORD, SEEDER_ORG_NAME in .env
-npm run seed
+npm test
 ```
 
-Default sample admin (if using defaults):
+## Documentation
 
-- Email: `admin@invenzaa.com`
-- Password: `Admin123!`
+| Document | Purpose |
+|----------|---------|
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosting, env vars, Atlas, Render/Railway-style notes |
+| [docs/FINAL_MANUAL_TEST_PLAN.md](docs/FINAL_MANUAL_TEST_PLAN.md) | **UAT / sign-off checklist** (line-by-line) |
 
-## Production Hardening
+## Configuration notes
 
-- **Input validation**: express-validator on all routes
-- **Security**: Helmet, rate limiting (API + auth), CORS
-- **Error handling**: Centralized handler, proper HTTP status codes
-- **MongoDB**: Indexes on all models, duplicate prevention
-- **Logging**: Winston with configurable levels
-- **Expiry/Stock**: Edge cases handled (expired batches, insufficient stock)
+- **CORS / `CLIENT_URL`:** Must allow your frontend origin in production.
+- **Secrets:** Use strong random values for JWT secrets; never commit real `.env` files.
+- **Database:** Use a dedicated database name per environment (dev/staging/prod).
 
-## Deployment
+## License
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for:
+Use and license terms are determined by the project owner; add a `LICENSE` file if you need an explicit OSS or proprietary statement.
 
-- MongoDB Atlas setup
-- Render / Railway backend deployment
-- Frontend deployment (Render, Vercel)
+---
 
-## API Collection
-
-Import [docs/Invenzaa-Postman-Collection.json](docs/Invenzaa-Postman-Collection.json) into Postman.
-
-## Folder Structure
-
-See [docs/FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md).
+_Invenzaa — inventory and collaboration for pharmacies._

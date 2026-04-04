@@ -6,6 +6,11 @@ import { AppError } from '../middleware/errorHandler.js';
 import { env } from '../config/env.js';
 import { sendMail } from '../utils/mailer.js';
 import { ensureDefaultRolesForOrg } from './rolesController.js';
+import { normalizeAuthEmail } from '../utils/authEmail.js';
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign(
@@ -23,7 +28,8 @@ const generateTokens = (userId) => {
 
 export const register = async (req, res, next) => {
   try {
-    const { email, password, firstName, lastName, organizationName } = req.body;
+    const { password, firstName, lastName, organizationName } = req.body;
+    const email = normalizeAuthEmail(req.body.email);
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -66,11 +72,23 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = normalizeAuthEmail(req.body.email);
 
-    const user = await User.findOne({ email }).select('+password').populate('organization', 'name');
+    let user = await User.findOne({ email }).select('+password').populate('organization', 'name');
+    if (!user) {
+      user = await User.findOne({
+        email: { $regex: new RegExp(`^${escapeRegex(email)}$`, 'i') },
+      })
+        .select('+password')
+        .populate('organization', 'name');
+    }
 
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      throw new AppError('User is not registered. Please register first.', 401);
+    }
+
+    if (!(await user.comparePassword(password))) {
       throw new AppError('Invalid email or password.', 401);
     }
 
@@ -158,7 +176,7 @@ export const refreshToken = async (req, res, next) => {
 
 export const forgotPassword = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const email = normalizeAuthEmail(req.body.email);
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -213,7 +231,8 @@ export const forgotPassword = async (req, res, next) => {
 
 export const resetPassword = async (req, res, next) => {
   try {
-    const { email, token, newPassword } = req.body;
+    const { token, newPassword } = req.body;
+    const email = normalizeAuthEmail(req.body.email);
     if (!email || !token || !newPassword) {
       throw new AppError('email, token and newPassword are required.', 400);
     }

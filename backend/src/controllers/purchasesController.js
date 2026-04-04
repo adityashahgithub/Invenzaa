@@ -5,10 +5,24 @@ import { AppError } from '../middleware/errorHandler.js';
 
 const getOrgId = (req) => req.user.organization?._id ?? req.user.organization;
 
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * List UI shows "General Supplier" when supplierName is unset/empty.
+ * Searching that label must still find those purchases.
+ */
+function matchesBlankSupplierDisplaySearch(q) {
+  const t = q.trim().toLowerCase().replace(/\s+/g, ' ');
+  return ['general supplier', 'default supplier', 'default', 'n/a', 'na', '-', 'none', 'no supplier'].includes(t);
+}
+
 export const createPurchase = async (req, res, next) => {
   try {
     const orgId = getOrgId(req);
     const userId = req.user._id;
+    const userRole = req.user.role;
     const { items, supplierName } = req.body;
 
     const result = await createPurchaseWithTransaction({
@@ -16,6 +30,7 @@ export const createPurchase = async (req, res, next) => {
       supplierName,
       orgId,
       userId,
+      userRole,
     });
 
     res.status(201).json({
@@ -37,9 +52,30 @@ export const listPurchases = async (req, res, next) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
     const q = req.query.q?.trim();
-    const filter = { organization: orgId };
+    let filter;
     if (q) {
-      filter.supplierName = { $regex: q, $options: 'i' };
+      const escaped = escapeRegex(q);
+      if (matchesBlankSupplierDisplaySearch(q)) {
+        filter = {
+          $and: [
+            { organization: orgId },
+            {
+              $or: [
+                { supplierName: { $regex: escaped, $options: 'i' } },
+                { supplierName: '' },
+                { supplierName: { $exists: false } },
+              ],
+            },
+          ],
+        };
+      } else {
+        filter = {
+          organization: orgId,
+          supplierName: { $regex: escaped, $options: 'i' },
+        };
+      }
+    } else {
+      filter = { organization: orgId };
     }
 
     const [purchases, total] = await Promise.all([

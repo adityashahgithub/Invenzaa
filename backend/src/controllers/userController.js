@@ -2,6 +2,8 @@ import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { ensureDefaultRolesForOrg } from './rolesController.js';
+import { normalizeAuthEmail } from '../utils/authEmail.js';
+import { normalizeRolePermissions } from '../utils/permissions.js';
 
 export const getMe = async (req, res, next) => {
   try {
@@ -10,7 +12,7 @@ export const getMe = async (req, res, next) => {
       .select('-password -refreshToken -passwordResetToken -passwordResetExpires')
       .populate('organization', 'name address licenseNumber phone');
     const role = await Role.findOne({ organization: orgId, name: user.role }).select('permissions').lean();
-    const rolePermissions = role?.permissions || [];
+    const rolePermissions = normalizeRolePermissions(role?.permissions || []);
 
     res.json({
       success: true,
@@ -70,7 +72,8 @@ export const changePassword = async (req, res, next) => {
 
 export const createUser = async (req, res, next) => {
   try {
-    const { email, password, firstName, lastName, role } = req.body;
+    const { password, firstName, lastName, role } = req.body;
+    const email = normalizeAuthEmail(req.body.email);
     const orgId = req.user.organization?._id ?? req.user.organization;
     await ensureDefaultRolesForOrg(orgId);
 

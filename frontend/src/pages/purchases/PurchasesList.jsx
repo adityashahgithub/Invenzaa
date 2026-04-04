@@ -70,9 +70,13 @@ export const PurchasesList = () => {
                   {purchase.items?.map((item, idx) => (
                     <TableRow key={idx} className="border-slate-800">
                       <TableCell className="py-2 text-slate-300">{item.medicine?.name || 'Unknown'}</TableCell>
-                      <TableCell className="py-2 text-slate-400 font-mono text-xs">{item.batchNo}</TableCell>
+                      <TableCell className="py-2 text-slate-400 font-mono text-xs">
+                        {item.batch?.batchNo || '—'}
+                      </TableCell>
                       <TableCell className="py-2 text-right">{item.quantity}</TableCell>
-                      <TableCell className="py-2 text-right">{formatCurrency(item.costPrice)}</TableCell>
+                      <TableCell className="py-2 text-right">
+                        {formatCurrency((item.unitCost || 0) * (item.quantity || 0))}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -136,7 +140,7 @@ export const PurchasesList = () => {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by supplier name..."
+            placeholder="Search supplier (try “General Supplier” for blank supplier field)..."
             className="pl-10 bg-slate-900 border-slate-800 focus:ring-blue-500"
           />
         </div>

@@ -36,6 +36,7 @@ export const createPurchaseWithTransaction = async ({
   supplierName,
   orgId,
   userId,
+  userRole,
 }) => {
   return runWithTransaction(async (session) => {
     if (!items?.length) {
@@ -47,7 +48,15 @@ export const createPurchaseWithTransaction = async ({
     const batchUpdates = [];
 
     for (const item of items) {
-      const { medicineId, batchNo, quantity, unitCost, manufactureDate, expiryDate } = item;
+      const {
+        medicineId,
+        batchNo,
+        quantity,
+        unitCost,
+        manufactureDate,
+        expiryDate,
+        allowExpiredBatchImport,
+      } = item;
 
       const medicine = await Medicine.findOne({ _id: medicineId, organization: orgId });
       if (!medicine) throw new AppError(`Medicine not found: ${medicineId}`, 404);
@@ -59,8 +68,17 @@ export const createPurchaseWithTransaction = async ({
       }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
+      const isPrivileged = userRole === 'Owner' || userRole === 'Admin';
+      const canImportExpired = Boolean(allowExpiredBatchImport) && isPrivileged;
+
       if (expDate < today) {
-        throw new AppError('Cannot add expired batch. Expiry date is in the past.', 400);
+        if (!canImportExpired) {
+          throw new AppError(
+            'Cannot add expired batch. Use expired import (Owner/Admin only) for historical records.',
+            400
+          );
+        }
       }
       if (!quantity || quantity < 1) {
         throw new AppError('Quantity must be at least 1', 400);

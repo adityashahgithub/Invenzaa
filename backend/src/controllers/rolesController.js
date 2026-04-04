@@ -1,6 +1,11 @@
 import { Role } from '../models/Role.js';
 import { User } from '../models/User.js';
 import { AppError } from '../middleware/errorHandler.js';
+import {
+  MODULE_PERMISSION_IDS,
+  normalizeRolePermissions,
+  partitionRolePermissions,
+} from '../utils/permissions.js';
 
 const DEFAULT_ROLES = [
   { name: 'Owner', permissions: ['*'], description: 'Full system access' },
@@ -48,9 +53,13 @@ export const getRoles = async (req, res, next) => {
     const orgId = req.user.organization?._id ?? req.user.organization;
     await ensureDefaultRolesForOrg(orgId);
     const roles = await Role.find({ organization: orgId }).sort({ name: 1 }).lean();
+    const rolesOut = roles.map((r) => ({
+      ...r,
+      permissions: normalizeRolePermissions(r.permissions || []),
+    }));
     res.json({
       success: true,
-      data: { roles },
+      data: { roles: rolesOut },
     });
   } catch (error) {
     next(error);
@@ -68,7 +77,19 @@ export const createRole = async (req, res, next) => {
     if (existing) {
       throw new AppError('Role with this name already exists.', 400);
     }
-    const role = await Role.create({ name: name.trim(), organization: orgId, permissions, description });
+    const { normalized, invalid } = partitionRolePermissions(permissions);
+    if (invalid.length) {
+      throw new AppError(
+        `Unknown permission(s): ${invalid.join(', ')}. Valid: ${MODULE_PERMISSION_IDS.join(', ')}, or * for full access.`,
+        400
+      );
+    }
+    const role = await Role.create({
+      name: name.trim(),
+      organization: orgId,
+      permissions: normalized,
+      description,
+    });
     res.status(201).json({
       success: true,
       message: 'Role created',
@@ -104,7 +125,16 @@ export const updateRole = async (req, res, next) => {
       }
       role.name = name.trim();
     }
-    if (permissions !== undefined) role.permissions = permissions;
+    if (permissions !== undefined) {
+      const { normalized, invalid } = partitionRolePermissions(permissions);
+      if (invalid.length) {
+        throw new AppError(
+          `Unknown permission(s): ${invalid.join(', ')}. Valid: ${MODULE_PERMISSION_IDS.join(', ')}, or * for full access.`,
+          400
+        );
+      }
+      role.permissions = normalized;
+    }
     if (description !== undefined) role.description = description;
     await role.save();
     res.json({

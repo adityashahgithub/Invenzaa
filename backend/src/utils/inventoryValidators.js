@@ -10,6 +10,7 @@ export const purchaseValidation = [
   body('items.*.unitCost').isFloat({ min: 0 }).withMessage('Unit cost must be ≥ 0'),
   body('items.*.manufactureDate').isISO8601().withMessage('Valid manufacture date required'),
   body('items.*.expiryDate').isISO8601().withMessage('Valid expiry date required'),
+  body('items.*.allowExpiredBatchImport').optional().isBoolean().withMessage('allowExpiredBatchImport must be true/false'),
   body('supplierName').optional().trim().isLength({ max: 200 }),
 ];
 

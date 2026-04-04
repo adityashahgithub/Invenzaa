@@ -28,7 +28,8 @@
 
 6. **Set database name** in the URI:
 
-  
+   ```
+   ```
 
 7. **Use as env var**:
    ```

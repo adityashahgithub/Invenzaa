@@ -314,3 +314,321 @@
   font-size: 1rem;
   color: var(--color-text);
 }
+
+/* —— Partner request page (CollaborationRequest) —— */
+.requestPage {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 0 3rem;
+}
+
+.requestBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.requestBack:hover {
+  color: var(--color-primary);
+}
+
+.requestHero {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.requestHeroIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1rem;
+  border-radius: 14px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.requestTitle {
+  font-family: Outfit, sans-serif;
+  font-size: clamp(1.4rem, 2.2vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.5rem;
+}
+
+.requestSubtitle {
+  margin: 0 auto;
+  max-width: 28rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.requestShell {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.55);
+}
+
+.requestBody {
+  padding: 1.5rem 1.65rem 1rem;
+}
+
+.requestField {
+  margin-bottom: 1.25rem;
+}
+
+.requestField:last-of-type {
+  margin-bottom: 0;
+}
+
+.requestLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.45rem;
+}
+
+.requestLabelIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.reqMark {
+  color: var(--color-warning);
+  font-weight: 700;
+}
+
+.optionalMark {
+  font-weight: 500;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+}
+
+.requestInput,
+.requestTextarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 0.92rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.requestInput:hover,
+.requestTextarea:hover {
+  border-color: var(--color-border-bright);
+}
+
+.requestInput:focus,
+.requestTextarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.requestTextarea {
+  resize: vertical;
+  min-height: 6rem;
+  line-height: 1.45;
+}
+
+.requestTextarea::placeholder {
+  color: var(--color-text-dim);
+}
+
+.requestHint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-warning);
+}
+
+.requestError {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.requestFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1.1rem 1.65rem 1.35rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+}
+
+.requestBtnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.65rem;
+  padding: 0.65rem 1.15rem;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.requestBtnGhost:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.requestBtnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.65rem;
+  padding: 0.65rem 1.35rem;
+  background: var(--grad-primary);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 16px -4px rgba(37, 99, 235, 0.55);
+  transition: filter 0.12s ease, opacity 0.12s ease;
+}
+
+.requestBtnPrimary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.requestBtnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .requestFooter {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .requestBtnPrimary,
+  .requestBtnGhost {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* —— Partner response (CollaborationRespond) —— */
+.respondLoading {
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.respondInboxCard {
+  margin-bottom: 1.5rem;
+  padding: 1.15rem 1.35rem;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 120%);
+  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.5);
+}
+
+.respondFromRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.respondFromRow strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.respondFromIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.respondSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.respondSummaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.respondMiniIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.respondSummaryLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.respondSummaryValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.respondRequestNote {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  align-items: flex-start;
+}
+
+.respondNoteText {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}

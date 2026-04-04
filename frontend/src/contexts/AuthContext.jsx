@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api/authApi';
 import { userApi } from '../api/userApi';
+import { roleGrantsPermission } from '../utils/permissions';
 
 const AuthContext = createContext(null);
 
@@ -78,8 +79,7 @@ export const AuthProvider = ({ children }) => {
     if (!user) return false;
     if (user.role === 'Owner' || user.role === 'Admin') return true;
     const rolePermissions = user.rolePermissions || [];
-    if (rolePermissions.includes('*')) return true;
-    return permissions.some((p) => rolePermissions.includes(p));
+    return permissions.some((p) => roleGrantsPermission(rolePermissions, p));
   };
 
   const isAdmin = () => hasRole('Admin', 'Owner');

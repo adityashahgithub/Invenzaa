@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { rolesApi } from '../../api/rolesApi';
 import { useUI } from '../../contexts/UIContext';
+import {
+  MODULE_PERMISSION_OPTIONS,
+  normalizeRolePermissions,
+  permissionLabel,
+} from '../../utils/permissions';
 import styles from './RolesPage.module.css';
 
 export const RolesPage = () => {
   const SYSTEM_ROLES = ['Owner', 'Admin', 'Pharmacist', 'Staff', 'Viewer'];
-  const { showToast, confirm, openModal, closeModal } = useUI();
+  const { showToast, confirm } = useUI();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [editing, setEditing] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [newPermission, setNewPermission] = useState('');
-  const [showPermInput, setShowPermInput] = useState(false);
   const [form, setForm] = useState({ name: '', permissions: [], description: '' });
 
   const fetchRoles = async () => {
@@ -29,6 +31,33 @@ export const RolesPage = () => {
   useEffect(() => {
     fetchRoles();
   }, []);
+
+  const fullAccessSelected = (form.permissions || []).includes('*');
+
+  const setFullAccess = (checked) => {
+    setForm((p) => ({
+      ...p,
+      permissions: checked ? ['*'] : [],
+    }));
+  };
+
+  const toggleModule = (id) => {
+    setForm((p) => {
+      let perms = [...(p.permissions || [])];
+      if (perms.includes('*')) perms = [];
+      if (perms.includes(id)) {
+        perms = perms.filter((x) => x !== id);
+      } else {
+        perms.push(id);
+      }
+      return { ...p, permissions: normalizeRolePermissions(perms) };
+    });
+  };
+
+  const openCreateModal = () => {
+    setForm({ name: '', permissions: [], description: '' });
+    setShowCreate(true);
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -71,7 +100,7 @@ export const RolesPage = () => {
         } catch (err) {
           showToast(err.response?.data?.message || 'Failed to delete role', 'error');
         }
-      }
+      },
     });
   };
 
@@ -79,27 +108,63 @@ export const RolesPage = () => {
     setEditing(role);
     setForm({
       name: role.name,
-      permissions: role.permissions || [],
+      permissions: normalizeRolePermissions(role.permissions || []),
       description: role.description || '',
     });
   };
 
-  const addPermission = () => {
-    if (newPermission.trim()) {
-      setForm((p) => ({
-        ...p,
-        permissions: [...(p.permissions || []), newPermission.trim()],
-      }));
-      setNewPermission('');
-      setShowPermInput(false);
-    }
-  };
+  const PermissionPicker = () => (
+    <div className={styles.permissionPicker}>
+      <label className={styles.fullAccessRow}>
+        <input
+          type="checkbox"
+          checked={fullAccessSelected}
+          onChange={(e) => setFullAccess(e.target.checked)}
+        />
+        <span>
+          <strong>Full access</strong>
+          <span className={styles.fullAccessHint}>All modules (same as Owner/Admin scope)</span>
+        </span>
+      </label>
+      <p className={styles.moduleLegend}>Or choose specific modules (permission id <code>medicines</code> covers the medicine catalog):</p>
+      <div className={styles.moduleGrid}>
+        {MODULE_PERMISSION_OPTIONS.map((opt) => (
+          <label
+            key={opt.id}
+            className={`${styles.moduleCard} ${fullAccessSelected ? styles.moduleCardDisabled : ''}`}
+          >
+            <input
+              type="checkbox"
+              checked={fullAccessSelected || (form.permissions || []).includes(opt.id)}
+              disabled={fullAccessSelected}
+              onChange={() => toggleModule(opt.id)}
+            />
+            <span className={styles.moduleCardBody}>
+              <span className={styles.moduleLabel}>{opt.label}</span>
+              <span className={styles.moduleHint}>{opt.hint}</span>
+              <code className={styles.moduleId}>{opt.id}</code>
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
 
-  const removePermission = (idx) => {
-    setForm((p) => ({
-      ...p,
-      permissions: (p.permissions || []).filter((_, i) => i !== idx),
-    }));
+  const renderRolePermissions = (perms) => {
+    const list = normalizeRolePermissions(perms || []);
+    if (list.includes('*')) {
+      return (
+        <span className={styles.permBadgeFull}>Full access</span>
+      );
+    }
+    if (list.length === 0) {
+      return <span className={styles.muted}>None</span>;
+    }
+    return list.map((p) => (
+      <span key={p} className={styles.permBadge}>
+        {permissionLabel(p)}
+      </span>
+    ));
   };
 
   if (loading) return <div className={styles.loading}>Loading roles...</div>;
@@ -108,25 +173,28 @@ export const RolesPage = () => {
     <div className="page-container">
       <header className={styles.header}>
         <h1>Roles & Permissions</h1>
-        <button className={styles.addBtn} onClick={() => setShowCreate(true)}>
+        <button type="button" className={styles.addBtn} onClick={openCreateModal}>
           Create Role
         </button>
       </header>
 
       <div className={styles.grid}>
         {roles.map((r) => (
-          <div key={r._id} className="glass-card animate-fade-in">
+          <article key={r._id} className={styles.roleCard}>
             <div className={styles.cardHeader}>
-              <h3>
+              <h3 className={styles.roleTitle}>
                 {r.name}
-                {SYSTEM_ROLES.includes(r.name) && <span className={styles.systemRole}>System</span>}
+                {SYSTEM_ROLES.includes(r.name) && (
+                  <span className={styles.systemRole}>System</span>
+                )}
               </h3>
               <div className={styles.cardActions}>
-                <button className={styles.smallBtn} onClick={() => startEdit(r)}>
+                <button type="button" className={styles.smallBtn} onClick={() => startEdit(r)}>
                   Edit
                 </button>
                 {!SYSTEM_ROLES.includes(r.name) && (
                   <button
+                    type="button"
                     className={`${styles.smallBtn} ${styles.danger}`}
                     onClick={() => handleDelete(r._id)}
                   >
@@ -135,21 +203,12 @@ export const RolesPage = () => {
                 )}
               </div>
             </div>
-            {r.description && (
-              <p className={styles.desc}>{r.description}</p>
-            )}
-            <div className={styles.permissions}>
-              <span className={styles.permTitle}>Permissions:</span>
-              <div className={styles.permTags}>
-                {(r.permissions || []).map((p, i) => (
-                  <span key={i} className={styles.permBadge}>{p === '*' ? 'Full Access' : p}</span>
-                ))}
-                {(!r.permissions || r.permissions.length === 0) && (
-                  <span className={styles.muted}>None</span>
-                )}
-              </div>
+            {r.description && <p className={styles.desc}>{r.description}</p>}
+            <div className={styles.permissionsBlock}>
+              <span className={styles.permTitle}>Permissions</span>
+              <div className={styles.permTags}>{renderRolePermissions(r.permissions)}</div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
 
@@ -158,7 +217,9 @@ export const RolesPage = () => {
           <div className={`${styles.modal} glass`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Create Role</h2>
-              <button className={styles.closeBtn} onClick={() => setShowCreate(false)}>&times;</button>
+              <button type="button" className={styles.closeBtn} onClick={() => setShowCreate(false)}>
+                &times;
+              </button>
             </div>
             <form onSubmit={handleCreate} className={styles.modalForm}>
               <div className="form-group">
@@ -183,36 +244,15 @@ export const RolesPage = () => {
               </div>
               <div className="form-group">
                 <label className="label">Permissions</label>
-                <div className={styles.permList}>
-                  {(form.permissions || []).map((p, i) => (
-                    <span key={i} className={styles.permTag}>
-                      {p}
-                      <button type="button" onClick={() => removePermission(i)}>×</button>
-                    </span>
-                  ))}
-                </div>
-                {showPermInput ? (
-                  <div className={styles.inlineInput}>
-                    <input
-                      type="text"
-                      className="input"
-                      value={newPermission}
-                      onChange={(e) => setNewPermission(e.target.value)}
-                      placeholder="Permission name..."
-                      autoFocus
-                    />
-                    <button type="button" className="btn-primary" onClick={addPermission}>Add</button>
-                    <button type="button" className="btn-secondary" onClick={() => setShowPermInput(false)}>Cancel</button>
-                  </div>
-                ) : (
-                  <button type="button" className={styles.linkBtn} onClick={() => setShowPermInput(true)}>
-                    + Add permission
-                  </button>
-                )}
+                <PermissionPicker />
               </div>
               <div className={styles.modalFooter}>
-                <button type="button" className="btn-secondary" onClick={() => setShowCreate(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Create Role</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowCreate(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Create Role
+                </button>
               </div>
             </form>
           </div>
@@ -224,7 +264,9 @@ export const RolesPage = () => {
           <div className={`${styles.modal} glass`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Edit Role: {editing.name}</h2>
-              <button className={styles.closeBtn} onClick={() => setEditing(null)}>&times;</button>
+              <button type="button" className={styles.closeBtn} onClick={() => setEditing(null)}>
+                &times;
+              </button>
             </div>
             <form onSubmit={handleUpdate} className={styles.modalForm}>
               <div className="form-group">
@@ -247,36 +289,15 @@ export const RolesPage = () => {
               </div>
               <div className="form-group">
                 <label className="label">Permissions</label>
-                <div className={styles.permList}>
-                  {(form.permissions || []).map((p, i) => (
-                    <span key={i} className={styles.permTag}>
-                      {p}
-                      <button type="button" onClick={() => removePermission(i)}>×</button>
-                    </span>
-                  ))}
-                </div>
-                {showPermInput ? (
-                  <div className={styles.inlineInput}>
-                    <input
-                      type="text"
-                      className="input"
-                      value={newPermission}
-                      onChange={(e) => setNewPermission(e.target.value)}
-                      placeholder="Permission name..."
-                      autoFocus
-                    />
-                    <button type="button" className="btn-primary" onClick={addPermission}>Add</button>
-                    <button type="button" className="btn-secondary" onClick={() => setShowPermInput(false)}>Cancel</button>
-                  </div>
-                ) : (
-                  <button type="button" className={styles.linkBtn} onClick={() => setShowPermInput(true)}>
-                    + Add permission
-                  </button>
-                )}
+                <PermissionPicker />
               </div>
               <div className={styles.modalFooter}>
-                <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Changes</button>
+                <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Save Changes
+                </button>
               </div>
             </form>
           </div>

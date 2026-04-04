@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi';
 import { Logo } from '../../components/brand/Logo';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './Auth.module.css';
 
 export const ResetPassword = () => {
@@ -13,6 +14,8 @@ export const ResetPassword = () => {
 
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -77,26 +80,46 @@ export const ResetPassword = () => {
           )}
 
           <label className={styles.label}>New password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className={styles.input}
-            placeholder="Min 8 characters"
-            autoComplete="new-password"
-            required
-          />
+          <div className={styles.passwordWrap}>
+            <input
+              type={showNewPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className={styles.input}
+              placeholder="Min 8 characters"
+              autoComplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              className={styles.passToggle}
+              onClick={() => setShowNewPassword((prev) => !prev)}
+              aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+            >
+              {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
 
           <label className={styles.label}>Confirm new password</label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className={styles.input}
-            placeholder="Re-enter password"
-            autoComplete="new-password"
-            required
-          />
+          <div className={styles.passwordWrap}>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className={styles.input}
+              placeholder="Re-enter password"
+              autoComplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              className={styles.passToggle}
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+            >
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
 
           <button type="submit" className={styles.submitBtn} disabled={loading}>
             {loading ? 'Updating...' : 'Update password'}

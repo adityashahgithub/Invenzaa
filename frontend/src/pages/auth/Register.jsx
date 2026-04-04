@@ -29,7 +29,7 @@ export const Register = () => {
     setError('');
     setLoading(true);
     try {
-      await register(form);
+      await register({ ...form, email: form.email.trim() });
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');

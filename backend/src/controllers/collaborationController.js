@@ -2,9 +2,41 @@ import { CollaborationRequest } from '../models/CollaborationRequest.js';
 import { CollaborationResponse } from '../models/CollaborationResponse.js';
 import { Organization } from '../models/Organization.js';
 import { Medicine } from '../models/Medicine.js';
+import { Batch } from '../models/Batch.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 const getOrgId = (req) => req.user.organization?._id ?? req.user.organization;
+
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Resolve responder's catalog row for a requester's medicine (cross-org names often differ in genericName). */
+async function findResponderMedicine(orgId, requestedMedicine) {
+  const nameTrim = (requestedMedicine.name || '').trim();
+  if (!nameTrim) {
+    throw new AppError('Requested medicine has no name.', 400);
+  }
+
+  const nameRegex = new RegExp(`^${escapeRegex(nameTrim)}$`, 'i');
+  const candidates = await Medicine.find({
+    organization: orgId,
+    name: nameRegex,
+  })
+    .select('_id name genericName')
+    .lean();
+
+  if (candidates.length === 0) return null;
+  if (candidates.length === 1) return candidates[0];
+
+  const reqGen = (requestedMedicine.genericName || '').trim();
+  if (reqGen) {
+    const genLower = reqGen.toLowerCase();
+    const byGeneric = candidates.find(
+      (c) => (c.genericName || '').trim().toLowerCase() === genLower
+    );
+    if (byGeneric) return byGeneric;
+  }
+  return candidates[0];
+}
 
 export const getPartners = async (req, res, next) => {
   try {
@@ -177,11 +209,53 @@ export const createResponse = async (req, res, next) => {
     const existing = await CollaborationResponse.findOne({ request: requestId });
     if (existing) throw new AppError('Response already exists for this request', 400);
 
+    if (status === 'accepted') {
+      const offeredQty = Number(quantityOffered);
+      if (!Number.isFinite(offeredQty) || offeredQty <= 0) {
+        throw new AppError('quantityOffered must be greater than 0 for accepted responses.', 400);
+      }
+      if (offeredQty > request.quantity) {
+        throw new AppError('quantityOffered cannot exceed requested quantity.', 400);
+      }
+
+      const requestedMedicine = await Medicine.findById(request.medicine).select('name genericName');
+      if (!requestedMedicine) {
+        throw new AppError('Requested medicine reference is invalid.', 400);
+      }
+
+      const localMedicine = await findResponderMedicine(orgId, requestedMedicine);
+      if (!localMedicine) {
+        throw new AppError(
+          'Cannot approve request: this medicine is not available in your organization inventory.',
+          400
+        );
+      }
+
+      const stockAgg = await Batch.aggregate([
+        {
+          $match: {
+            organization: orgId,
+            medicine: localMedicine._id,
+            quantity: { $gt: 0 },
+            expiryDate: { $gt: new Date() },
+          },
+        },
+        { $group: { _id: '$medicine', total: { $sum: '$quantity' } } },
+      ]);
+      const availableQty = stockAgg?.[0]?.total || 0;
+      if (availableQty < offeredQty) {
+        throw new AppError(
+          `Cannot approve request: insufficient stock. Available ${availableQty}, offered ${offeredQty}.`,
+          400
+        );
+      }
+    }
+
     const response = await CollaborationResponse.create({
       request: requestId,
       status,
       message: message ?? '',
-      quantityOffered: status === 'accepted' ? quantityOffered : undefined,
+      quantityOffered: status === 'accepted' ? Number(quantityOffered) : undefined,
       respondedBy: userId,
     });
 

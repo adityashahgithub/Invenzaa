@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, Handshake, Send, Inbox, Plus } from "lucide-react";
+import { Eye, Send, Inbox, Plus } from "lucide-react";
 
 const formatDate = (d) =>
   d
@@ -26,13 +26,6 @@ const formatDate = (d) =>
       minute: '2-digit',
     })
     : '-';
-
-const STATUS_VARIANT = {
-  pending: "secondary",
-  approved: "success", // Custom addition to Badge if possible, otherwise default
-  rejected: "destructive",
-  cancelled: "outline",
-};
 
 export const CollaborationRequestsList = () => {
   const { isAdmin } = useAuth();
@@ -73,10 +66,10 @@ export const CollaborationRequestsList = () => {
               <p className="text-slate-200">{r.quantity}</p>
             </div>
           </div>
-          {r.notes && (
+          {r.message && (
             <div className="space-y-1 p-3 bg-slate-900 rounded-md border border-slate-800">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Notes</label>
-              <p className="text-slate-400 italic text-sm">"{r.notes}"</p>
+              <label className="text-xs font-semibold text-slate-500 uppercase">Message</label>
+              <p className="text-slate-400 italic text-sm">"{r.message}"</p>
             </div>
           )}
         </div>

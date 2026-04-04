@@ -6,6 +6,7 @@ export const refreshTokenValidation = [
 
 export const registerValidation = [
   body('email')
+    .trim()
     .isEmail()
     .normalizeEmail()
     .withMessage('Valid email is required'),
@@ -37,12 +38,12 @@ export const registerValidation = [
 ];
 
 export const loginValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('email').trim().isEmail().normalizeEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
 export const forgotPasswordValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('email').trim().isEmail().normalizeEmail().withMessage('Valid email is required'),
 ];
 
 export const changePasswordValidation = [
@@ -68,6 +69,7 @@ export const mongoIdParam = (paramName = 'id') => [
 
 export const createUserValidation = [
   body('email')
+    .trim()
     .isEmail()
     .normalizeEmail()
     .withMessage('Valid email is required'),

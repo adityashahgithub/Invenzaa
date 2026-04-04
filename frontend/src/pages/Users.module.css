@@ -210,3 +210,30 @@
 .modalActions button[type='submit']:hover {
   background: var(--color-primary-hover);
 }
+
+.passwordWrap {
+  position: relative;
+}
+
+.formRow .passwordWrap input {
+  padding-right: 2.6rem;
+}
+
+.passToggle {
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.passToggle:hover {
+  color: var(--color-text);
+}

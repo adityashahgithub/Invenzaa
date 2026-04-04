@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { userApi } from '../api/userApi';
 import { rolesApi } from '../api/rolesApi';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './Users.module.css';
 
 const PermissionBadge = ({ role, roles }) => {
@@ -26,6 +27,7 @@ export const Users = () => {
   const [error, setError] = useState('');
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddPassword, setShowAddPassword] = useState(false);
   const [addForm, setAddForm] = useState({
     email: '',
     password: '',
@@ -240,13 +242,25 @@ export const Users = () => {
               </div>
               <div className={styles.formRow}>
                 <label>Password</label>
-                <input
-                  type="password"
-                  value={addForm.password}
-                  onChange={(e) => setAddForm((p) => ({ ...p, password: e.target.value }))}
-                  minLength={8}
-                  required
-                />
+                <div className={styles.passwordWrap}>
+                  <input
+                    type={showAddPassword ? 'text' : 'password'}
+                    value={addForm.password}
+                    onChange={(e) =>
+                      setAddForm((p) => ({ ...p, password: e.target.value }))
+                    }
+                    minLength={8}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={styles.passToggle}
+                    onClick={() => setShowAddPassword((prev) => !prev)}
+                    aria-label={showAddPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showAddPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
               <div className={styles.formRow}>
                 <label>Role</label>

@@ -1,5 +1,6 @@
 import { AppError } from './errorHandler.js';
 import { Role } from '../models/Role.js';
+import { roleGrantsPermission } from '../utils/permissions.js';
 
 const ROLE_HIERARCHY = ['Viewer', 'Staff', 'Pharmacist', 'Admin', 'Owner'];
 
@@ -49,10 +50,8 @@ export const requirePermission = (...requiredPermissions) => {
       }
 
       const permissions = role.permissions || [];
-      if (permissions.includes('*')) return next();
-
       const hasPermission = requiredPermissions.some((permission) =>
-        permissions.includes(permission)
+        roleGrantsPermission(permissions, permission)
       );
 
       if (!hasPermission) {

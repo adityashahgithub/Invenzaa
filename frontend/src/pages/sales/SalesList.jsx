@@ -19,7 +19,22 @@ const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
 const formatCurrency = (n) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
+    Number.isFinite(Number(n)) ? Number(n) : 0
+  );
+
+/** API line items use `unitPrice`; derive from line total ÷ qty if needed. */
+const saleLineUnitPrice = (item) => {
+  const raw = item.unitPrice ?? item.price;
+  if (raw != null && raw !== '') {
+    const n = Number(raw);
+    if (Number.isFinite(n)) return n;
+  }
+  const qty = Number(item.quantity);
+  const total = item.total != null ? Number(item.total) : NaN;
+  if (Number.isFinite(qty) && qty > 0 && Number.isFinite(total)) return total / qty;
+  return 0;
+};
 
 export const SalesList = () => {
   const { openModal, closeModal } = useUI();
@@ -68,9 +83,11 @@ export const SalesList = () => {
                 <TableBody>
                   {sale.items?.map((item, idx) => (
                     <TableRow key={idx} className="border-slate-800">
-                      <TableCell className="py-2 text-slate-300">{item.medicine?.name || 'Unknown'}</TableCell>
+                      <TableCell className="py-2 text-slate-300">
+                        {item.medicineName || item.medicine?.name || 'Unknown'}
+                      </TableCell>
                       <TableCell className="py-2 text-right">{item.quantity}</TableCell>
-                      <TableCell className="py-2 text-right">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="py-2 text-right">{formatCurrency(saleLineUnitPrice(item))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

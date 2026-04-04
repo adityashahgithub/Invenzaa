@@ -18,6 +18,14 @@ const formatCurrency = (n) =>
     maximumFractionDigits: 0,
   }).format(n);
 
+const formatCompactCurrency = (value) => {
+  const n = Number(value || 0);
+  if (Math.abs(n) < 1000) return `₹${Math.round(n)}`;
+  if (Math.abs(n) < 100000) return `₹${(n / 1000).toFixed(1)}k`;
+  if (Math.abs(n) < 10000000) return `₹${(n / 100000).toFixed(1)}L`;
+  return `₹${(n / 10000000).toFixed(1)}Cr`;
+};
+
 const toDateStr = (d) => d.toISOString().slice(0, 10);
 
 export const ReportsPage = () => {
@@ -150,7 +158,7 @@ export const ReportsPage = () => {
                       <BarChart data={data.byMonth}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#2d3a4d" />
                         <XAxis dataKey="month" stroke="#8b9cb3" />
-                        <YAxis stroke="#8b9cb3" tickFormatter={(v) => `₹${v / 1000}k`} />
+                        <YAxis stroke="#8b9cb3" tickFormatter={formatCompactCurrency} />
                         <Tooltip
                           formatter={(v) => formatCurrency(v)}
                           contentStyle={{ background: '#1a2332', border: '1px solid #2d3a4d' }}
@@ -201,7 +209,7 @@ export const ReportsPage = () => {
                       <BarChart data={data.byMonth}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#2d3a4d" />
                         <XAxis dataKey="month" stroke="#8b9cb3" />
-                        <YAxis stroke="#8b9cb3" tickFormatter={(v) => `₹${v / 1000}k`} />
+                        <YAxis stroke="#8b9cb3" tickFormatter={formatCompactCurrency} />
                         <Tooltip
                           formatter={(v) => formatCurrency(v)}
                           contentStyle={{ background: '#1a2332', border: '1px solid #2d3a4d' }}
