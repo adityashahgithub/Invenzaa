@@ -30,15 +30,12 @@
 }
 
 .brandIconSmall {
-  width: 24px;
-  height: 24px;
-  background: var(--grad-primary);
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 0.75rem;
+  flex-shrink: 0;
+  line-height: 0;
+  filter: drop-shadow(0 2px 8px rgba(34, 211, 238, 0.2));
 }
 
 .hamburger {
@@ -89,16 +86,12 @@
 }
 
 .brandIcon {
-  width: 36px;
-  height: 36px;
-  background: var(--grad-primary);
-  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 800;
-  box-shadow: 0 4px 12px hsla(var(--color-primary-hue), 83%, 53%, 0.3);
+  flex-shrink: 0;
+  line-height: 0;
+  filter: drop-shadow(0 4px 14px rgba(99, 102, 241, 0.28));
 }
 
 .brand span {

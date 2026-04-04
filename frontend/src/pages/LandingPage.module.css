@@ -51,14 +51,11 @@
 }
 
 .logoIcon {
-    width: 32px;
-    height: 32px;
-    background: var(--grad-primary);
-    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    line-height: 0;
+    filter: drop-shadow(0 4px 16px rgba(20, 184, 166, 0.35));
 }
 
 .navActions {

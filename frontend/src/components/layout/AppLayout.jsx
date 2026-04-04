@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Logo } from '../brand/Logo';
 import styles from './AppLayout.module.css';
 
 export const AppLayout = () => {
@@ -29,7 +30,9 @@ export const AppLayout = () => {
       {/* Mobile Hamburger Header */}
       <header className={styles.mobileHeader}>
         <div className={styles.brandSmall}>
-          <span className={styles.brandIconSmall}>◈</span>
+          <span className={styles.brandIconSmall}>
+            <Logo size={26} />
+          </span>
           <span>Invenzaa</span>
         </div>
         <button onClick={toggleSidebar} className={styles.hamburger}>
@@ -44,7 +47,9 @@ export const AppLayout = () => {
 
       <aside className={`${styles.sidebar} ${showMobileSidebar ? styles.sidebarOpen : ''}`}>
         <div className={styles.brand}>
-          <span className={styles.brandIcon}>◈</span>
+          <span className={styles.brandIcon}>
+            <Logo size={40} />
+          </span>
           <span>Invenzaa</span>
         </div>
         <nav className={styles.nav}>

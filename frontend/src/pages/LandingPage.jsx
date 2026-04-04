@@ -10,7 +10,7 @@ export const LandingPage = () => {
             <div className={styles.bgGlowBottom} />
             <nav className={styles.nav}>
                 <div className={styles.logo}>
-                    <div className={styles.logoIcon}><Logo size={32} /></div>
+                    <div className={styles.logoIcon}><Logo size={36} /></div>
                     <span>Invenzaa</span>
                 </div>
                 <div className={styles.navActions}>
