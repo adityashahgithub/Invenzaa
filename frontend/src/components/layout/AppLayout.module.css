@@ -115,6 +115,17 @@
   margin-top: 2rem;
 }
 
+.navSectionToggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .navSectionTitle {
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
@@ -123,6 +134,12 @@
   letter-spacing: 0.08em;
   color: var(--color-text-dim);
   display: block;
+}
+
+.navSectionCaret {
+  color: var(--color-text-dim);
+  font-size: 0.875rem;
+  padding-right: 0.75rem;
 }
 
 .navLink {

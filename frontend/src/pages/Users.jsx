@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { userApi } from '../api/userApi';
 import { rolesApi } from '../api/rolesApi';
-import { Eye, EyeOff } from 'lucide-react';
 import styles from './Users.module.css';
 
 const PermissionBadge = ({ role, roles }) => {
@@ -25,12 +24,11 @@ export const Users = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState(null);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAddPassword, setShowAddPassword] = useState(false);
   const [addForm, setAddForm] = useState({
     email: '',
-    password: '',
     firstName: '',
     lastName: '',
     role: '',
@@ -82,10 +80,26 @@ export const Users = () => {
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setError('');
+    setNotice(null);
     try {
-      await userApi.createUser(addForm);
+      const { data } = await userApi.createUser(addForm);
       setShowAddModal(false);
-      setAddForm({ email: '', password: '', firstName: '', lastName: '', role: '' });
+      setAddForm({ email: '', firstName: '', lastName: '', role: '' });
+
+      const invite = data?.data?.invite;
+      if (invite?.emailSent) {
+        setNotice({
+          type: 'success',
+          message: data?.message || 'User created and invite email sent.',
+        });
+      } else {
+        const fallback = invite?.inviteUrl ? ` Temporary invite link: ${invite.inviteUrl}` : '';
+        setNotice({
+          type: 'warning',
+          message: (data?.message || 'User created, but invite email was not sent.') + fallback,
+        });
+      }
+
       await fetchUsers();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to add user');
@@ -128,6 +142,14 @@ export const Users = () => {
       {error && (
         <div className={styles.error} onAnimationEnd={() => setError('')}>
           {error}
+        </div>
+      )}
+      {notice && (
+        <div
+          className={notice.type === 'success' ? styles.success : styles.warning}
+          onAnimationEnd={() => setNotice(null)}
+        >
+          {notice.message}
         </div>
       )}
       <div className={styles.searchRow}>
@@ -212,6 +234,7 @@ export const Users = () => {
         <div className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <h2>Add Staff</h2>
+            <p className={styles.modalHint}>An invite email with a secure password setup link will be sent to this user.</p>
             <form onSubmit={handleAddStaff}>
               <div className={styles.formRow}>
                 <label>First name</label>
@@ -239,28 +262,6 @@ export const Users = () => {
                   onChange={(e) => setAddForm((p) => ({ ...p, email: e.target.value }))}
                   required
                 />
-              </div>
-              <div className={styles.formRow}>
-                <label>Password</label>
-                <div className={styles.passwordWrap}>
-                  <input
-                    type={showAddPassword ? 'text' : 'password'}
-                    value={addForm.password}
-                    onChange={(e) =>
-                      setAddForm((p) => ({ ...p, password: e.target.value }))
-                    }
-                    minLength={8}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className={styles.passToggle}
-                    onClick={() => setShowAddPassword((prev) => !prev)}
-                    aria-label={showAddPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showAddPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
               </div>
               <div className={styles.formRow}>
                 <label>Role</label>

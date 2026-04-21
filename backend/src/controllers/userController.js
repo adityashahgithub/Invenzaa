@@ -4,6 +4,15 @@ import { AppError } from '../middleware/errorHandler.js';
 import { ensureDefaultRolesForOrg } from './rolesController.js';
 import { normalizeAuthEmail } from '../utils/authEmail.js';
 import { normalizeRolePermissions } from '../utils/permissions.js';
+import { sendMail } from '../utils/mailer.js';
+import { env } from '../config/env.js';
+import crypto from 'crypto';
+
+const getPrimaryClientUrl = () => {
+  const raw = String(env.clientUrl || '').trim();
+  if (!raw) return 'http://localhost:5173';
+  return raw.split(',')[0].trim();
+};
 
 export const getMe = async (req, res, next) => {
   try {
@@ -72,7 +81,7 @@ export const changePassword = async (req, res, next) => {
 
 export const createUser = async (req, res, next) => {
   try {
-    const { password, firstName, lastName, role } = req.body;
+    const { firstName, lastName, role } = req.body;
     const email = normalizeAuthEmail(req.body.email);
     const orgId = req.user.organization?._id ?? req.user.organization;
     await ensureDefaultRolesForOrg(orgId);
@@ -90,14 +99,59 @@ export const createUser = async (req, res, next) => {
       throw new AppError('Invalid role. Role does not exist.', 400);
     }
 
+    // Assign a strong temporary password and force the user to set their own password via invite link.
+    const temporaryPassword = crypto.randomBytes(24).toString('hex');
+
     const user = await User.create({
       email,
-      password,
+      password: temporaryPassword,
       firstName,
       lastName,
       role: roleExists.name,
       organization: orgId,
     });
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    await User.findByIdAndUpdate(user._id, {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: Date.now() + 24 * 60 * 60 * 1000,
+      refreshToken: null,
+    });
+
+    const baseClientUrl = getPrimaryClientUrl();
+    const inviteUrl = `${baseClientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+    let mailResult = { skipped: true };
+    let inviteDeliveryError = '';
+    try {
+      mailResult = await sendMail({
+        to: email,
+        subject: 'You have been invited to Invenzaa',
+        text: `You have been invited as ${roleExists.name}. Set your password using this secure link: ${inviteUrl}`,
+        html: `
+          <div style="font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6">
+            <h2 style="margin:0 0 12px">You are invited to Invenzaa</h2>
+            <p style="margin:0 0 12px">Hello ${firstName}, your account has been created with role <strong>${roleExists.name}</strong>.</p>
+            <p style="margin:0 0 18px">Click below to set your password and activate your login.</p>
+            <p style="margin:0 0 18px">
+              <a href="${inviteUrl}" style="display:inline-block;padding:10px 14px;border-radius:10px;background:#2563eb;color:#fff;text-decoration:none">
+                Set password
+              </a>
+            </p>
+            <p style="margin:0;color:#475569;font-size:14px">This link expires in 24 hours.</p>
+          </div>
+        `,
+      });
+    } catch (mailError) {
+      mailResult = { skipped: true };
+      inviteDeliveryError = mailError?.message || 'Failed to send invite email.';
+    }
+
+    if (mailResult.skipped && env.nodeEnv === 'development') {
+      console.log('Staff invite link (mail not configured):', inviteUrl);
+    }
 
     const userResponse = await User.findById(user._id)
       .select('-password -refreshToken -passwordResetToken -passwordResetExpires')
@@ -105,8 +159,19 @@ export const createUser = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'User created',
-      data: { user: userResponse },
+      message: !mailResult.skipped
+        ? 'User created and invite email sent.'
+        : inviteDeliveryError
+          ? 'User created, but invite email could not be sent. Configure mail settings and retry invite.'
+          : 'User created. Invite email not sent because mail is not configured.',
+      data: {
+        user: userResponse,
+        invite: {
+          emailSent: !mailResult.skipped,
+          ...(mailResult.skipped && env.nodeEnv === 'development' ? { inviteUrl } : {}),
+          ...(inviteDeliveryError ? { deliveryError: inviteDeliveryError } : {}),
+        },
+      },
     });
   } catch (error) {
     next(error);

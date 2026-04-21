@@ -8,6 +8,8 @@ export const AppLayout = () => {
   const { user, logout, isAdmin, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showMastersSection, setShowMastersSection] = useState(true);
+  const [showAdminSection, setShowAdminSection] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -131,58 +133,80 @@ export const AppLayout = () => {
 
           {(user?.role === 'Admin' || user?.role === 'Owner') && (
             <div className={styles.navSection}>
-              <span className={styles.navSectionTitle}>Masters</span>
-              <NavLink
-                to="/masters/categories"
-                onClick={closeSidebar}
-                className={({ isActive }) =>
-                  isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-                }
+              <button
+                type="button"
+                className={styles.navSectionToggle}
+                onClick={() => setShowMastersSection((v) => !v)}
               >
-                Categories
-              </NavLink>
-              <NavLink
-                to="/masters/brands"
-                onClick={closeSidebar}
-                className={({ isActive }) =>
-                  isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-                }
-              >
-                Brands
-              </NavLink>
-              <NavLink
-                to="/masters/sellers"
-                onClick={closeSidebar}
-                className={({ isActive }) =>
-                  isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-                }
-              >
-                Suppliers
-              </NavLink>
+                <span className={styles.navSectionTitle}>Masters</span>
+                <span className={styles.navSectionCaret}>{showMastersSection ? '▾' : '▸'}</span>
+              </button>
+              {showMastersSection && (
+                <>
+                  <NavLink
+                    to="/masters/categories"
+                    onClick={closeSidebar}
+                    className={({ isActive }) =>
+                      isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+                    }
+                  >
+                    Categories
+                  </NavLink>
+                  <NavLink
+                    to="/masters/brands"
+                    onClick={closeSidebar}
+                    className={({ isActive }) =>
+                      isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+                    }
+                  >
+                    Brands
+                  </NavLink>
+                  <NavLink
+                    to="/masters/sellers"
+                    onClick={closeSidebar}
+                    className={({ isActive }) =>
+                      isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+                    }
+                  >
+                    Suppliers
+                  </NavLink>
+                </>
+              )}
             </div>
           )}
 
           {isAdmin() && (
             <div className={styles.navSection}>
-              <span className={styles.navSectionTitle}>Admin Control</span>
-              <NavLink
-                to="/users"
-                onClick={closeSidebar}
-                className={({ isActive }) =>
-                  isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-                }
+              <button
+                type="button"
+                className={styles.navSectionToggle}
+                onClick={() => setShowAdminSection((v) => !v)}
               >
-                Team & Users
-              </NavLink>
-              <NavLink
-                to="/roles"
-                onClick={closeSidebar}
-                className={({ isActive }) =>
-                  isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-                }
-              >
-                Roles & Permissions
-              </NavLink>
+                <span className={styles.navSectionTitle}>Admin Control</span>
+                <span className={styles.navSectionCaret}>{showAdminSection ? '▾' : '▸'}</span>
+              </button>
+              {showAdminSection && (
+                <>
+                  <NavLink
+                    to="/users"
+                    onClick={closeSidebar}
+                    className={({ isActive }) =>
+                      isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+                    }
+                  >
+                    Team & Users
+                  </NavLink>
+                  <NavLink
+                    to="/roles"
+                    onClick={closeSidebar}
+                    className={({ isActive }) =>
+                      isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
+                    }
+                  >
+                    Roles & Permissions
+                  </NavLink>
+                </>
+              )}
             </div>
           )}
         </nav>

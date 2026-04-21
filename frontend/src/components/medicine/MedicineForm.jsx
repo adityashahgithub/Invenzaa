@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { masterApi } from '../../api/masterApi';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,18 +17,26 @@ const defaultValues = {
   genericName: '',
   description: '',
   category: '',
+  brand: '',
   unit: 'pcs',
   minStockLevel: 10,
-  manufacturer: '',
   prescriptionRequired: false,
 };
 
 export const MedicineForm = ({ medicine, onSubmit, onCancel, loading, error }) => {
   const [form, setForm] = useState(defaultValues);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
 
   useEffect(() => {
     setForm(medicine ? { ...defaultValues, ...medicine } : defaultValues);
   }, [medicine]);
+
+  // Fetch categories and brands from master data
+  useEffect(() => {
+    masterApi.list('categories').then(setCategories).catch(() => setCategories([]));
+    masterApi.list('brands').then(setBrands).catch(() => setBrands([]));
+  }, []);
 
   const handleChange = (name, value) => {
     setForm((prev) => ({
@@ -47,8 +56,13 @@ export const MedicineForm = ({ medicine, onSubmit, onCancel, loading, error }) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && <div className="p-3 text-sm bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-md">{error}</div>}
+      {error && (
+        <div className="p-3 text-sm bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-md">
+          {error}
+        </div>
+      )}
 
+      {/* Name + Generic Name */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Name *</Label>
@@ -75,6 +89,7 @@ export const MedicineForm = ({ medicine, onSubmit, onCancel, loading, error }) =
         </div>
       </div>
 
+      {/* Description */}
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Textarea
@@ -88,25 +103,62 @@ export const MedicineForm = ({ medicine, onSubmit, onCancel, loading, error }) =
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Category + Brand - both from masters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>
-          <Input
-            id="category"
-            name="category"
-            value={form.category}
-            onChange={(e) => handleChange('category', e.target.value)}
-            placeholder="e.g. Antibiotic"
-            className="bg-slate-900 border-slate-800"
-          />
+          <Select
+            value={form.category || '__none__'}
+            onValueChange={(v) => handleChange('category', v === '__none__' ? '' : v)}
+            disabled={categories.length === 0}
+          >
+            <SelectTrigger id="category" className="bg-slate-900 border-slate-800">
+              <SelectValue placeholder={categories.length === 0 ? 'No categories available' : 'Select category'} />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800">
+              <SelectItem value="__none__">- None -</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c._id} value={c.name}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {categories.length === 0 && (
+            <p className="text-xs text-slate-500">Add categories in Masters - Categories first.</p>
+          )}
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="brand">Brand</Label>
+          <Select
+            value={form.brand || '__none__'}
+            onValueChange={(v) => handleChange('brand', v === '__none__' ? '' : v)}
+            disabled={brands.length === 0}
+          >
+            <SelectTrigger id="brand" className="bg-slate-900 border-slate-800">
+              <SelectValue placeholder={brands.length === 0 ? 'No brands available' : 'Select brand'} />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800">
+              <SelectItem value="__none__">- None -</SelectItem>
+              {brands.map((b) => (
+                <SelectItem key={b._id} value={b.name}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {brands.length === 0 && (
+            <p className="text-xs text-slate-500">Add brands in Masters - Brands first.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Unit + Min Stock */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="unit">Unit</Label>
           <Select
             value={form.unit}
             onValueChange={(value) => handleChange('unit', value)}
           >
-            <SelectTrigger className="bg-slate-900 border-slate-800">
+            <SelectTrigger id="unit" className="bg-slate-900 border-slate-800">
               <SelectValue placeholder="Select unit" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-800">
@@ -132,18 +184,7 @@ export const MedicineForm = ({ medicine, onSubmit, onCancel, loading, error }) =
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="manufacturer">Manufacturer</Label>
-        <Input
-          id="manufacturer"
-          name="manufacturer"
-          value={form.manufacturer}
-          onChange={(e) => handleChange('manufacturer', e.target.value)}
-          placeholder="Manufacturer name"
-          className="bg-slate-900 border-slate-800"
-        />
-      </div>
-
+      {/* Prescription */}
       <div className="flex items-center space-x-2 pt-2">
         <input
           type="checkbox"
@@ -153,13 +194,22 @@ export const MedicineForm = ({ medicine, onSubmit, onCancel, loading, error }) =
           onChange={(e) => handleChange('prescriptionRequired', e.target.checked)}
           className="h-4 w-4 rounded border-slate-800 bg-slate-900 text-blue-600 focus:ring-blue-600 focus:ring-offset-slate-900"
         />
-        <Label htmlFor="prescriptionRequired" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <Label
+          htmlFor="prescriptionRequired"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           Prescription required
         </Label>
       </div>
 
+      {/* Actions */}
       <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} className="border-slate-800 text-slate-300 hover:bg-slate-800">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="border-slate-800 text-slate-300 hover:bg-slate-800"
+        >
           Cancel
         </Button>
         <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { medicineApi } from '../../api/medicineApi';
+import { masterApi } from '../../api/masterApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { MedicineForm } from '../../components/medicine/MedicineForm';
@@ -15,6 +16,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Eye, Edit, Trash2, Plus, Search, X } from "lucide-react";
 import styles from './MedicineList.module.css';
 
@@ -26,20 +34,25 @@ export const MedicineList = () => {
   const [medicines, setMedicines] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const limit = parseInt(searchParams.get('limit') || '10', 10);
   const q = searchParams.get('q') || '';
+  const categoryQuery = searchParams.get('category') || '';
 
   useEffect(() => {
     setSearch(q);
-  }, [q]);
+    setCategory(categoryQuery);
+  }, [q, categoryQuery]);
 
   const fetchMedicines = async (isSearch = false) => {
     setLoading(true);
     try {
       const params = { page, limit };
+      if (categoryQuery) params.category = categoryQuery;
       const { data } = isSearch
         ? await medicineApi.search({ ...params, q })
         : await medicineApi.list(params);
@@ -54,12 +67,17 @@ export const MedicineList = () => {
 
   useEffect(() => {
     fetchMedicines(!!q);
-  }, [page, limit, q]);
+  }, [page, limit, q, categoryQuery]);
+
+  useEffect(() => {
+    masterApi.list('categories').then(setCategories).catch(() => setCategories([]));
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (search.trim()) params.set('q', search.trim());
+    if (category) params.set('category', category);
     params.set('page', '1');
     params.set('limit', String(limit));
     navigate({ pathname: '/medicines', search: params.toString() });
@@ -67,7 +85,27 @@ export const MedicineList = () => {
 
   const handleClear = () => {
     setSearch('');
+    setCategory('');
     navigate('/medicines');
+  };
+
+  const handleCategoryChange = (value) => {
+    const nextCategory = value === '__all__' ? '' : value;
+    setCategory(nextCategory);
+    const params = new URLSearchParams(searchParams);
+    if (nextCategory) {
+      params.set('category', nextCategory);
+    } else {
+      params.delete('category');
+    }
+    if (search.trim()) {
+      params.set('q', search.trim());
+    } else {
+      params.delete('q');
+    }
+    params.set('page', '1');
+    params.set('limit', String(limit));
+    navigate({ pathname: '/medicines', search: params.toString() });
   };
 
   const handleView = async (id) => {
@@ -92,8 +130,8 @@ export const MedicineList = () => {
                 <p className="text-slate-200">{m.unit || '-'}</p>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Manufacturer</label>
-                <p className="text-slate-200">{m.manufacturer || '-'}</p>
+                <label className="text-xs font-semibold text-slate-500 uppercase">Brand</label>
+                <p className="text-slate-200">{m.brand || '-'}</p>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Min Stock Level</label>
@@ -200,7 +238,11 @@ export const MedicineList = () => {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Medicines</h1>
-          <p className="text-slate-400">Track and manage your pharmaceutical inventory.</p>
+          <p className="text-slate-400">
+            {pagination.total} total medicine{pagination.total === 1 ? '' : 's'}
+            {categoryQuery ? ` in ${categoryQuery}` : ''}
+            .
+          </p>
         </div>
         {canEdit && (
           <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
@@ -219,8 +261,19 @@ export const MedicineList = () => {
             className="pl-10 bg-slate-900 border-slate-800 focus:ring-blue-500"
           />
         </div>
+        <Select value={category || '__all__'} onValueChange={handleCategoryChange}>
+          <SelectTrigger className="w-[220px] bg-slate-900 border-slate-800">
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectItem value="__all__">All categories</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c._id} value={c.name}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button type="submit" variant="secondary">Search</Button>
-        {q && (
+        {(q || categoryQuery) && (
           <Button type="button" variant="ghost" onClick={handleClear}>
             <X className="mr-2 h-4 w-4" /> Clear
           </Button>
@@ -244,7 +297,14 @@ export const MedicineList = () => {
               {medicines.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center text-slate-500">
-                    No medicines found.
+                    <div className="flex flex-col items-center gap-2 py-6">
+                      <span>No medicines found.</span>
+                      {canEdit && (
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={handleAdd}>
+                          <Plus className="mr-2 h-4 w-4" /> Add your first medicine
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

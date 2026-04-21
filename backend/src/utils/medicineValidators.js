@@ -5,9 +5,9 @@ export const createMedicineValidation = [
   body('genericName').optional().trim().isLength({ max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
   body('category').optional().trim().isLength({ max: 100 }),
+  body('brand').optional().trim().isLength({ max: 100 }),
   body('unit').optional().trim().isLength({ max: 20 }),
   body('minStockLevel').optional().isInt({ min: 0 }).withMessage('Min stock must be ≥ 0'),
-  body('manufacturer').optional().trim().isLength({ max: 200 }),
   body('prescriptionRequired').optional().isBoolean(),
 ];
 
@@ -17,9 +17,9 @@ export const updateMedicineValidation = [
   body('genericName').optional().trim().isLength({ max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
   body('category').optional().trim().isLength({ max: 100 }),
+  body('brand').optional().trim().isLength({ max: 100 }),
   body('unit').optional().trim().isLength({ max: 20 }),
   body('minStockLevel').optional().isInt({ min: 0 }),
-  body('manufacturer').optional().trim().isLength({ max: 200 }),
   body('prescriptionRequired').optional().isBoolean(),
 ];
 

@@ -22,6 +22,11 @@ const medicineSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    categoryRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
     unit: {
       type: String,
       default: 'pcs',
@@ -32,10 +37,15 @@ const medicineSchema = new mongoose.Schema(
       default: 10,
       min: 0,
     },
-    manufacturer: {
+    brand: {
       type: String,
       default: '',
       trim: true,
+    },
+    brandRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Brand',
+      default: null,
     },
     prescriptionRequired: {
       type: Boolean,
@@ -53,5 +63,8 @@ const medicineSchema = new mongoose.Schema(
 medicineSchema.index({ organization: 1 });
 medicineSchema.index({ organization: 1, name: 1 });
 medicineSchema.index({ organization: 1, category: 1 });
+medicineSchema.index({ organization: 1, categoryRef: 1 });
+medicineSchema.index({ organization: 1, brand: 1 });
+medicineSchema.index({ organization: 1, brandRef: 1 });
 
 export const Medicine = mongoose.model('Medicine', medicineSchema);
