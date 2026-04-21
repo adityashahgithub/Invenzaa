@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PackagePlus, Truck, ClipboardList, Trash2, CheckCircle2 } from 'lucide-react';
 import { purchasesApi } from '../../api/purchasesApi';
 import { medicineApi } from '../../api/medicineApi';
+import { masterApi } from '../../api/masterApi';
 import { downloadInvoicePdf } from '../../utils/invoiceDownload';
 import styles from './NewPurchase.module.css';
 
@@ -33,8 +34,10 @@ const createEmptyLine = () => {
 export const NewPurchase = () => {
   const navigate = useNavigate();
   const [medicines, setMedicines] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
   const [supplierName, setSupplierName] = useState('');
+  const [selectedSupplier, setSelectedSupplier] = useState('__manual__');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
@@ -44,6 +47,13 @@ export const NewPurchase = () => {
       .list({ limit: 500 })
       .then(({ data }) => setMedicines(data?.data?.medicines ?? []))
       .catch(() => setMedicines([]));
+  }, []);
+
+  useEffect(() => {
+    masterApi
+      .list('sellers')
+      .then((items) => setSuppliers(items || []))
+      .catch(() => setSuppliers([]));
   }, []);
 
   /** One empty row once catalog is loaded so the medicine dropdown is visible (catalog ≠ line items). */
@@ -236,6 +246,29 @@ export const NewPurchase = () => {
             </div>
           </div>
           <div className={styles.supplierField}>
+            <label htmlFor="supplier-select" className={styles.visuallyHidden}>
+              Select supplier
+            </label>
+            <select
+              id="supplier-select"
+              value={selectedSupplier}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedSupplier(value);
+                if (value !== '__manual__') {
+                  setSupplierName(value);
+                }
+              }}
+              className={styles.inputLg}
+            >
+              <option value="__manual__">Type manually</option>
+              {suppliers.map((s) => (
+                <option key={s._id} value={s.name}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+
             <label htmlFor="supplier-name" className={styles.visuallyHidden}>
               Supplier name
             </label>
@@ -243,8 +276,11 @@ export const NewPurchase = () => {
               id="supplier-name"
               type="text"
               value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
-              placeholder="Vendor or distributor name"
+              onChange={(e) => {
+                setSupplierName(e.target.value);
+                setSelectedSupplier('__manual__');
+              }}
+              placeholder={suppliers.length > 0 ? 'Selected supplier or custom supplier name' : 'Vendor or distributor name'}
               className={styles.inputLg}
               autoComplete="organization"
             />

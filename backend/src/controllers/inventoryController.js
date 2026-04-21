@@ -108,7 +108,88 @@ export const getStatus = async (req, res, next) => {
       basePipeline.push({ $match: { status: filter } });
     }
 
-    const [pagedResult, medicines, stockAgg, expiredCount, expiringSoonCount] = await Promise.all([
+    const [medicines, stockAgg, expiredCount, expiringSoonCount] = await Promise.all([
+      Medicine.find(
+        { organization: orgId },
+        '_id name genericName category unit minStockLevel'
+      ).lean(),
+      Batch.aggregate([
+        { $match: { organization: orgId, expiryDate: { $gt: new Date() }, quantity: { $gt: 0 } } },
+        { $group: { _id: '$medicine', total: { $sum: '$quantity' } } },
+      ]),
+      Batch.countDocuments({ organization: orgId, quantity: { $gt: 0 }, expiryDate: { $lt: today } }),
+      Batch.countDocuments({
+        organization: orgId,
+        quantity: { $gt: 0 },
+        expiryDate: { $gte: today, $lte: expiryThreshold },
+      }),
+    ]);
+
+    const stockMap = Object.fromEntries(stockAgg.map((s) => [s._id.toString(), s.total]));
+
+    const lowStockMedicines = medicines
+      .map((m) => ({
+        ...m,
+        currentStock: stockMap[m._id.toString()] ?? 0,
+        minStockLevel: m.minStockLevel ?? 10,
+      }))
+      .filter((m) => m.currentStock <= m.minStockLevel);
+
+    const lowStockCount = lowStockMedicines.length;
+
+    if (filter === 'low_stock') {
+      let sorted = [...lowStockMedicines];
+
+      if (sort === 'stock') {
+        sorted.sort((a, b) => sortOrder * (a.currentStock - b.currentStock || a.name.localeCompare(b.name)));
+      } else {
+        sorted.sort((a, b) => sortOrder * a.name.localeCompare(b.name));
+      }
+
+      const total = sorted.length;
+      const pageItems = sorted.slice((page - 1) * limit, page * limit).map((m) => ({
+        _id: `low-${m._id}`,
+        batchNo: '—',
+        quantity: 0,
+        expiryDate: null,
+        manufactureDate: null,
+        medicineId: m._id,
+        medicine: {
+          _id: m._id,
+          name: m.name,
+          genericName: m.genericName,
+          category: m.category,
+          unit: m.unit,
+          minStockLevel: m.minStockLevel,
+        },
+        totalStockForMedicine: m.currentStock,
+        minStockLevel: m.minStockLevel,
+        status: 'low_stock',
+        isExpired: false,
+        isLowStock: true,
+        isExpiringSoon: false,
+      }));
+
+      return res.json({
+        success: true,
+        data: {
+          items: pageItems,
+          summary: {
+            expiredCount,
+            expiringSoonCount,
+            lowStockCount,
+          },
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        },
+      });
+    }
+
+    const [pagedResult] = await Promise.all([
       Batch.aggregate([
         ...basePipeline,
         { $sort: { [sortField]: sortOrder, _id: 1 } },
@@ -146,23 +227,8 @@ export const getStatus = async (req, res, next) => {
           },
         },
       ]),
-      Medicine.find({ organization: orgId }, '_id minStockLevel').lean(),
-      Batch.aggregate([
-        { $match: { organization: orgId, expiryDate: { $gt: new Date() }, quantity: { $gt: 0 } } },
-        { $group: { _id: '$medicine', total: { $sum: '$quantity' } } },
-      ]),
-      Batch.countDocuments({ organization: orgId, quantity: { $gt: 0 }, expiryDate: { $lt: today } }),
-      Batch.countDocuments({
-        organization: orgId,
-        quantity: { $gt: 0 },
-        expiryDate: { $gte: today, $lte: expiryThreshold },
-      }),
     ]);
 
-    const stockMap = Object.fromEntries(stockAgg.map((s) => [s._id.toString(), s.total]));
-    const lowStockCount = medicines.filter(
-      (m) => (stockMap[m._id.toString()] ?? 0) <= (m.minStockLevel ?? 10)
-    ).length;
     const items = pagedResult?.[0]?.items ?? [];
     const total = pagedResult?.[0]?.meta?.[0]?.total ?? 0;
 

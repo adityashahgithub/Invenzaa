@@ -44,7 +44,16 @@ export const PurchaseDetail = () => {
     return purchase?.items || [];
   }, [invoice, purchase]);
 
-  const goToList = () => navigate('/purchases');
+  const goToList = () => {
+    navigate('/purchases', { replace: true });
+
+    // Safety fallback if router navigation is interrupted by stale app state.
+    setTimeout(() => {
+      if (window.location.pathname.includes('/purchases/')) {
+        window.location.assign('/purchases');
+      }
+    }, 0);
+  };
 
   if (loading) {
     return (

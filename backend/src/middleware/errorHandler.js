@@ -31,8 +31,11 @@ export const errorHandler = (err, req, res, next) => {
 
   if (statusCode >= 500) {
     logger.error(`${err.message || err}`, { stack: err.stack });
-  } else {
-    logger.warn(`${statusCode} ${message}`, { path: req.path });
+  } else if (!err.alreadyLogged) {
+    logger.warn(`${statusCode} ${message}`, {
+      path: req.path,
+      method: req.method,
+    });
   }
 
   const response = {

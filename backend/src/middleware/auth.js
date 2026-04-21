@@ -2,11 +2,11 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { AppError } from './errorHandler.js';
 import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
 
 export const protect = async (req, res, next) => {
+  let token = null;
   try {
-    let token = null;
-
     if (req.headers.authorization?.startsWith('Bearer ')) {
       token = req.headers.authorization.split(' ')[1];
     } else if (req.cookies?.accessToken) {
@@ -36,7 +36,30 @@ export const protect = async (req, res, next) => {
     if (error.name === 'JsonWebTokenError') {
       next(new AppError('Invalid token.', 401));
     } else if (error.name === 'TokenExpiredError') {
-      next(new AppError('Token expired. Please login again.', 401));
+      let tokenUserId = null;
+      let tokenEmail = null;
+
+      if (token) {
+        const decoded = jwt.decode(token);
+        tokenUserId = decoded?.id || null;
+
+        if (tokenUserId) {
+          const expiredUser = await User.findById(tokenUserId).select('email').lean();
+          tokenEmail = expiredUser?.email || null;
+        }
+      }
+
+      logger.warn('401 Token expired. Please login again.', {
+        path: req.path,
+        method: req.method,
+        tokenUserId,
+        tokenEmail,
+        ip: req.ip,
+      });
+
+      const appError = new AppError('Token expired. Please login again.', 401);
+      appError.alreadyLogged = true;
+      next(appError);
     } else {
       next(error);
     }

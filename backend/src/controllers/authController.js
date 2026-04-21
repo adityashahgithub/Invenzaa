@@ -26,6 +26,14 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
+const accessTokenExpiresInSeconds = (accessToken) => {
+  const decoded = jwt.decode(accessToken);
+  if (decoded?.exp && decoded?.iat) {
+    return Math.max(1, decoded.exp - decoded.iat);
+  }
+  return 3600;
+};
+
 export const register = async (req, res, next) => {
   try {
     const { password, firstName, lastName, organizationName } = req.body;
@@ -62,7 +70,7 @@ export const register = async (req, res, next) => {
         user: userResponse,
         accessToken,
         refreshToken,
-        expiresIn: 900,
+        expiresIn: accessTokenExpiresInSeconds(accessToken),
       },
     });
   } catch (error) {
@@ -110,7 +118,7 @@ export const login = async (req, res, next) => {
         user: userResponse,
         accessToken,
         refreshToken,
-        expiresIn: 900,
+        expiresIn: accessTokenExpiresInSeconds(accessToken),
       },
     });
   } catch (error) {
@@ -162,7 +170,7 @@ export const refreshToken = async (req, res, next) => {
       data: {
         accessToken,
         refreshToken: newRefresh,
-        expiresIn: 900,
+        expiresIn: accessTokenExpiresInSeconds(accessToken),
       },
     });
   } catch (error) {

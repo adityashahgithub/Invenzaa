@@ -3,6 +3,10 @@ import { Brand } from '../models/Brand.js';
 import { Seller } from '../models/Seller.js';
 import { Medicine } from '../models/Medicine.js';
 
+const getOrgId = (req) => req.user.organization?._id ?? req.user.organization;
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const getModel = (type) => {
     switch (type) {
         case 'categories': return Category;
@@ -17,7 +21,7 @@ export const listItems = async (req, res) => {
     try {
         const type = req.params.type;
         const Model = getModel(type);
-        const orgId = req.user.organization;
+        const orgId = getOrgId(req);
 
         const items = await Model.find({ organization: orgId }).sort({ name: 1 });
         let itemsData = items.map((i) => i.toObject());
@@ -26,40 +30,51 @@ export const listItems = async (req, res) => {
         if (type === 'categories' || type === 'brands') {
             const field = type === 'categories' ? 'category' : 'brand';
             const refField = type === 'categories' ? 'categoryRef' : 'brandRef';
-            const names = itemsData.map((i) => i.name);
-            const ids = itemsData.map((i) => i._id);
+
             const counts = await Medicine.aggregate([
                 {
                     $match: {
                         organization: orgId,
-                        $or: [
-                            { [field]: { $in: names } },
-                            { [refField]: { $in: ids } },
-                        ],
+                    },
+                },
+                {
+                    $project: {
+                        key: {
+                            $cond: [
+                                { $ifNull: [`$${refField}`, false] },
+                                { $toString: `$${refField}` },
+                                {
+                                    $toLower: {
+                                        $trim: {
+                                            input: { $ifNull: [`$${field}`, ''] },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+                {
+                    $match: {
+                        key: { $ne: '' },
                     },
                 },
                 {
                     $group: {
-                        _id: { name: `$${field}`, ref: `$${refField}` },
+                        _id: '$key',
                         count: { $sum: 1 },
                     },
                 },
             ]);
 
-            const countMap = new Map();
-            counts.forEach((c) => {
-                if (c._id?.name) {
-                    countMap.set(c._id.name, (countMap.get(c._id.name) || 0) + c.count);
-                }
-                if (c._id?.ref) {
-                    const refKey = String(c._id.ref);
-                    countMap.set(refKey, (countMap.get(refKey) || 0) + c.count);
-                }
-            });
+            const countMap = new Map(counts.map((c) => [String(c._id), c.count]));
 
             itemsData = itemsData.map((i) => ({
                 ...i,
-                medicineCount: (countMap.get(i.name) || 0) + (countMap.get(String(i._id)) || 0),
+                medicineCount:
+                    countMap.get(String(i._id)) ||
+                    countMap.get((i.name || '').trim().toLowerCase()) ||
+                    0,
             }));
         }
 
@@ -74,7 +89,7 @@ export const createItem = async (req, res) => {
         const Model = getModel(req.params.type);
         const item = await Model.create({
             ...req.body,
-            organization: req.user.organization,
+            organization: getOrgId(req),
         });
         res.status(201).json({ success: true, data: { item } });
     } catch (error) {
@@ -89,7 +104,7 @@ export const updateItem = async (req, res) => {
     try {
         const Model = getModel(req.params.type);
         const item = await Model.findOneAndUpdate(
-            { _id: req.params.id, organization: req.user.organization },
+            { _id: req.params.id, organization: getOrgId(req) },
             req.body,
             { new: true, runValidators: true }
         );
@@ -105,7 +120,7 @@ export const deleteItem = async (req, res) => {
     try {
         const type = req.params.type;
         const Model = getModel(type);
-        const orgId = req.user.organization;
+        const orgId = getOrgId(req);
 
         const item = await Model.findOne({ _id: req.params.id, organization: orgId });
         if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
@@ -114,7 +129,7 @@ export const deleteItem = async (req, res) => {
             const inUseCount = await Medicine.countDocuments({
                 organization: orgId,
                 $or: [
-                    { category: item.name },
+                    { category: { $regex: `^${escapeRegex(item.name)}$`, $options: 'i' } },
                     { categoryRef: item._id },
                 ],
             });
@@ -130,7 +145,7 @@ export const deleteItem = async (req, res) => {
             const inUseCount = await Medicine.countDocuments({
                 organization: orgId,
                 $or: [
-                    { brand: item.name },
+                    { brand: { $regex: `^${escapeRegex(item.name)}$`, $options: 'i' } },
                     { brandRef: item._id },
                 ],
             });
