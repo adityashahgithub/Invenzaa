@@ -67,6 +67,89 @@ npm test
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosting, env vars, Atlas, Render/Railway-style notes |
 | [docs/FINAL_MANUAL_TEST_PLAN.md](docs/FINAL_MANUAL_TEST_PLAN.md) | **UAT / sign-off checklist** (line-by-line) |
 
+## Deployment (clean checklist)
+
+Use this for a quick, repeatable deployment setup.
+
+### 1. Prepare services
+
+- Create a MongoDB database (Atlas or self-hosted).
+- Choose hosting for backend (for example Render/Railway/VM).
+- Choose hosting for frontend (for example Vercel/Netlify/static server).
+
+### 2. Configure backend environment
+
+- Set production-safe values in `backend/.env`.
+- Start backend with:
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+### 3. Configure frontend environment
+
+- Set `VITE_API_URL` to your backend API base URL (for example `https://api.example.com/api`).
+- Build and serve frontend:
+
+```bash
+cd frontend
+npm install
+npm run build
+npm run preview
+```
+
+### 4. Verify after deploy
+
+- Open `/api/health` on backend and confirm success response.
+- Confirm login, add medicine, add staff invite email, and report pages load.
+- Confirm CORS allows your production frontend origin.
+
+## Contributor `.env` setup checklist
+
+### Backend (`backend/.env`)
+
+Required keys:
+
+| Key | Required | Example |
+|-----|----------|---------|
+| `NODE_ENV` | Yes | `development` |
+| `PORT` | Yes | `5001` |
+| `MONGODB_URI` | Yes | `mongodb://localhost:27017/invenzaa` |
+| `JWT_ACCESS_SECRET` | Yes | strong random string |
+| `JWT_REFRESH_SECRET` | Yes | strong random string |
+| `CLIENT_URL` | Yes | `http://localhost:5173` |
+| `RATE_LIMIT_MAX` | Recommended | `100` |
+| `AUTH_RATE_LIMIT_MAX` | Recommended | `10` |
+| `LOG_LEVEL` | Recommended | `debug` |
+
+Mail keys (needed for invite/reset emails):
+
+| Key | Required for Mail | Example |
+|-----|-------------------|---------|
+| `MAIL_HOST` | Yes | `smtp.gmail.com` |
+| `MAIL_PORT` | Yes | `587` |
+| `MAIL_USER` | Yes | your mailbox |
+| `MAIL_PASS` | Yes | app password |
+| `MAIL_FROM` | Yes | `"Invenzaa <your@email.com>"` |
+| `MAIL_SECURE` | Yes | `false` (for port 587) |
+
+### Frontend (`frontend/.env`)
+
+Recommended key:
+
+| Key | Required | Example |
+|-----|----------|---------|
+| `VITE_API_URL` | Yes (production) | `https://your-backend-domain/api` |
+
+### Security checklist before pushing code
+
+- Never commit real `.env` files.
+- Rotate credentials immediately if exposed.
+- Keep JWT secrets different across dev/staging/prod.
+- Use app passwords for SMTP providers instead of account passwords.
+
 ## Configuration notes
 
 - **CORS / `CLIENT_URL`:** Must allow your frontend origin in production.
