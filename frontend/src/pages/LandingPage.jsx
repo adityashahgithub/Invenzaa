@@ -43,7 +43,7 @@ export const LandingPage = () => {
                     <div className={`${styles.statsCard} glass animate-fade-in`}>
                         <div className={styles.statsIcon}><Boxes size={22} /></div>
                         <div>
-                            <h3>1,240+</h3>
+                            <h3>100+</h3>
                             <p>Medicines Tracked</p>
                         </div>
                     </div>
